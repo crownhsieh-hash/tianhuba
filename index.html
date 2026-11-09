@@ -258,6 +258,12 @@ header.hd{display:flex;align-items:flex-start;justify-content:space-between;gap:
 .ctrl-under .rules-btn{padding-left:12px;padding-right:12px}
 .ctrl-under .seg label{padding-left:8px;padding-right:8px}.ctrl-under #newGame{padding-left:10px;padding-right:10px}
 .fold .st-cum{display:block;margin:8px 0 6px;padding:0 0 6px;border-top:0;border-bottom:1px dashed var(--line)}
+.res-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.res-h h2{margin:0}
+.rules-panel{margin:0 0 16px}
+header.hd{align-items:baseline;justify-content:flex-start;gap:14px;flex-wrap:wrap}
+header.hd p{margin:0}
+#newGame[hidden]{display:none}
 </style>
 
 <div class="intro" id="intro" role="dialog" aria-modal="true" aria-labelledby="introT">
@@ -302,7 +308,7 @@ header.hd{display:flex;align-items:flex-start;justify-content:space-between;gap:
   </section>
 
   <div class="side">
-  <header class="hd"><div><h1>天胡霸</h1><p>麻將 × 拉霸</p></div></header>
+  <header class="hd"><h1>天胡霸</h1><p>麻將 × 拉霸</p></header>
   <section class="panel ctlpanel" aria-label="模式與牌局資訊">
     <div class="legend" hidden></div>
     <div class="infobar" aria-label="牌局資訊">
@@ -321,7 +327,7 @@ header.hd{display:flex;align-items:flex-start;justify-content:space-between;gap:
     <div style="margin-top:12px"><button id="pull">拉 下 手 柄</button></div>
     <div class="batch-row"><button id="batchBtn" hidden>連跑 100 場</button><button id="skipBtn" hidden>略過回放</button></div>
     <div class="ctrl ctrl-under">
-      <span class="lv-t" id="lvTitle">難度等級</span>
+      <span class="lv-t" id="lvTitle">難度</span>
       <div class="seg" role="radiogroup" aria-labelledby="lvTitle">
         <input type="radio" name="diff" id="d1" value="1"><label for="d1">天使</label>
         <input type="radio" name="diff" id="d2" value="2" checked><label for="d2">派對</label>
@@ -329,13 +335,16 @@ header.hd{display:flex;align-items:flex-start;justify-content:space-between;gap:
         <input type="radio" name="diff" id="d4" value="4"><label for="d4">地獄</label>
         <input type="radio" name="diff" id="d5" value="5" class="lv5" hidden><label for="d5" class="lv5" hidden>焦</label>
       </div>
-      <button id="newGame">重新開局</button>
+      <button id="newGame" hidden>重新開局</button>
       <label class="chk"><input type="checkbox" id="fast"> 加速</label>
-      <button id="rulesBtn" class="rules-btn" aria-expanded="false" aria-controls="rulesPanel">玩法規則</button>
     </div>
   </section>
 
-  <section class="panel rules-panel" id="rulesWrap" hidden>
+
+  <section class="panel">
+    <div class="batch-box" id="batchBox" hidden></div>
+    <div class="res-h"><h2>本局結果</h2><button id="rulesBtn" class="rules-btn" aria-expanded="false" aria-controls="rulesPanel">玩法規則</button></div>
+    <div class="rules-panel" id="rulesWrap" hidden>
     <details class="fold rules-fold" id="rulesPanel">
       <summary>玩法與規則說明</summary>
       <div class="rb">
@@ -363,11 +372,7 @@ header.hd{display:flex;align-items:flex-start;justify-content:space-between;gap:
         </details>
       </div>
     </details>
-  </section>
-
-  <section class="panel">
-    <div class="batch-box" id="batchBox" hidden></div>
-    <h2>本局結果</h2>
+    </div>
     <div class="result" id="result"><span class="big">拉下手柄開始</span><span style="color:var(--muted)">所有格子停下後，湊不成組的牌會關上閘門。聽牌就開 5-5，摸到聽牌張即胡牌。</span></div>
     <table id="tai" hidden><thead><tr><th>台型</th><th class="n">台</th></tr></thead><tbody></tbody></table>
     <h2 style="margin-top:16px">戰績</h2>
