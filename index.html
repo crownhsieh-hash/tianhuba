@@ -257,6 +257,8 @@ header.hd{display:flex;align-items:flex-start;justify-content:space-between;gap:
 .ctrl-under{margin:14px 0 0;padding-top:12px;border-top:1px dashed var(--line);gap:8px}
 .ctrl-under .rules-btn{padding-left:12px;padding-right:12px}
 .ctrl-under .seg label{padding-left:8px;padding-right:8px}.ctrl-under #newGame{padding-left:10px;padding-right:10px}
+.st-cum-s{display:block;margin:10px 0 0;padding:8px 10px;border:0;border-radius:8px;background:var(--felt);font-size:12px;line-height:1.7}
+.st-cum-s b{color:var(--text);font-weight:700}
 .fold .st-cum{display:block;margin:8px 0 6px;padding:0 0 6px;border-top:0;border-bottom:1px dashed var(--line)}
 .res-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
 .res-h h2{margin:0}
@@ -337,14 +339,24 @@ header.hd p{margin:0}
       </div>
       <button id="newGame" hidden>重新開局</button>
       <label class="chk"><input type="checkbox" id="fast"> 加速</label>
-      <button id="rulesBtn" class="rules-btn" aria-expanded="false" aria-controls="rulesPanel">玩法規則</button>
     </div>
   </section>
 
 
-  <section class="panel rules-panel" id="rulesWrap" hidden>
+  <section class="panel">
+    <div class="batch-box" id="batchBox" hidden></div>
+    <h2>本局結果</h2>
+    <div class="result" id="result"><span class="big">拉下手柄開始</span><span style="color:var(--muted)">所有格子停下後，湊不成組的牌會關上閘門。聽牌就開 5-5，摸到聽牌張即胡牌。</span></div>
+    <table id="tai" hidden><thead><tr><th>台型</th><th class="n">台</th></tr></thead><tbody></tbody></table>
+    <div class="stats" style="margin-top:16px">
+      <div hidden><b id="sRound">0</b><small>局數</small></div>
+      <div hidden><b id="sTing">0%</b><small>聽牌率</small></div>
+      <div><b id="sWin">0%</b><small>胡牌率</small></div>
+      <div><b id="sScore">0</b><small>總分</small></div>
+    </div>
+    <div class="st-cum st-cum-s" id="stCum"></div>
     <details class="fold rules-fold" id="rulesPanel">
-      <summary>玩法與規則說明</summary>
+      <summary>玩法規則</summary>
       <div class="rb">
         <details class="sub" open>
           <summary>怎麼玩</summary>
@@ -370,23 +382,8 @@ header.hd p{margin:0}
         </details>
       </div>
     </details>
-  </section>
-
-  <section class="panel">
-    <div class="batch-box" id="batchBox" hidden></div>
-    <h2>本局結果</h2>
-    <div class="result" id="result"><span class="big">拉下手柄開始</span><span style="color:var(--muted)">所有格子停下後，湊不成組的牌會關上閘門。聽牌就開 5-5，摸到聽牌張即胡牌。</span></div>
-    <table id="tai" hidden><thead><tr><th>台型</th><th class="n">台</th></tr></thead><tbody></tbody></table>
-    <h2 style="margin-top:16px">戰績</h2>
-    <div class="stats">
-      <div hidden><b id="sRound">0</b><small>局數</small></div>
-      <div hidden><b id="sTing">0%</b><small>聽牌率</small></div>
-      <div><b id="sWin">0%</b><small>胡牌率</small></div>
-      <div><b id="sScore">0</b><small>總分</small></div>
-    </div>
     <details class="fold">
       <summary>牌局紀錄</summary>
-    <div class="st-cum" id="stCum"></div>
     <ol id="log" reversed></ol>
     </details>
     <div hidden>
@@ -1315,7 +1312,6 @@ function renderIntroLv(){
   $('#introNow').textContent=lvName(cur);
   $('#introDeck').innerHTML=cur===5?'':deckHTML(cur,'牌組：'); $('#introNowSub').textContent=cur===5?'':LVINFO[cur].sub;
 }
-$('#rulesBtn').addEventListener('click',()=>{ const w=$('#rulesWrap'), b=$('#rulesBtn'), on=w.hidden; w.hidden=!on; $('#rulesPanel').open=on; b.setAttribute('aria-expanded',String(on)); });
 const introEl=$('#intro'), closeIntro=()=>{ introEl.hidden=true; };
 $('#introLv').addEventListener('click',e=>{ const b=e.target.closest('button[data-d]'); if(!b||busy) return; const r=document.querySelector(`input[name=diff][value="${b.dataset.d}"]`); if(r.checked) return; r.checked=true; applyLevel(false); });
 $('#introX').addEventListener('click',closeIntro);
