@@ -260,7 +260,7 @@ header.hd{display:flex;align-items:flex-start;justify-content:space-between;gap:
 .fold .st-cum{display:block;margin:8px 0 6px;padding:0 0 6px;border-top:0;border-bottom:1px dashed var(--line)}
 .res-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
 .res-h h2{margin:0}
-.rules-panel{margin:0 0 16px}
+.rules-panel{margin:0}
 header.hd{align-items:baseline;justify-content:flex-start;gap:14px;flex-wrap:wrap}
 header.hd p{margin:0}
 #newGame[hidden]{display:none}
@@ -313,7 +313,7 @@ header.hd p{margin:0}
     <div class="legend" hidden></div>
     <div class="infobar" aria-label="牌局資訊">
       <b id="stRound">東風 東 1 局</b><span class="badge" id="dealerBadge"></span><span class="badge" id="stHonba">連 0</span><span class="st-j" id="stJiang">第 1 將</span>
-      <span class="st-seat" id="stSeat"></span>
+      <span class="st-seat" id="stSeat" hidden></span>
     </div>
   </section>
 
@@ -337,14 +337,12 @@ header.hd p{margin:0}
       </div>
       <button id="newGame" hidden>重新開局</button>
       <label class="chk"><input type="checkbox" id="fast"> 加速</label>
+      <button id="rulesBtn" class="rules-btn" aria-expanded="false" aria-controls="rulesPanel">玩法規則</button>
     </div>
   </section>
 
 
-  <section class="panel">
-    <div class="batch-box" id="batchBox" hidden></div>
-    <div class="res-h"><h2>本局結果</h2><button id="rulesBtn" class="rules-btn" aria-expanded="false" aria-controls="rulesPanel">玩法規則</button></div>
-    <div class="rules-panel" id="rulesWrap" hidden>
+  <section class="panel rules-panel" id="rulesWrap" hidden>
     <details class="fold rules-fold" id="rulesPanel">
       <summary>玩法與規則說明</summary>
       <div class="rb">
@@ -372,7 +370,11 @@ header.hd p{margin:0}
         </details>
       </div>
     </details>
-    </div>
+  </section>
+
+  <section class="panel">
+    <div class="batch-box" id="batchBox" hidden></div>
+    <h2>本局結果</h2>
     <div class="result" id="result"><span class="big">拉下手柄開始</span><span style="color:var(--muted)">所有格子停下後，湊不成組的牌會關上閘門。聽牌就開 5-5，摸到聽牌張即胡牌。</span></div>
     <table id="tai" hidden><thead><tr><th>台型</th><th class="n">台</th></tr></thead><tbody></tbody></table>
     <h2 style="margin-top:16px">戰績</h2>
@@ -1228,7 +1230,7 @@ function renderStatus(){
   const g=GSt, real=RULES.dealer.mode==='real', dl=isDealer(g), sw=seatWind(g);
   $('#stRound').textContent=`${WIND[g.wind]}風 ${WIND[g.wind]} ${g.hand} 局`;
   $('#stHonba').textContent=`連 ${g.honba}`; $('#stHonba').classList.toggle('on',g.honba>0);
-  $('#stJiang').textContent=`第 ${g.jiang} 將`;
+  $('#stJiang').textContent=`第 ${g.jiang} 將`+(real&&!dl?` · 本局莊家：${WIND[g.hand-1]}位`:'');
   $('#stSeat').innerHTML=real?`抓位：<b>${WIND[g.seat]}位</b>（第 ${g.seat+1} 家）· 本局莊家：${WIND[g.hand-1]}位 · 你的門風：<b>${WIND[sw]}</b> · ${dl?'<b>你是莊家</b>':'你是閒家'}`:`指定模式：<b>你固定坐莊</b> · 門風 <b>東</b> · 圈風 ${WIND[g.wind]}`;
   let h='<tr><th></th>'+[1,2,3,4].map(n=>`<th>${n}</th>`).join('')+'</tr>';
   for(let w=0;w<4;w++){ h+=`<tr><th>${WIND[w]}</th>`; for(let n=1;n<=4;n++){ const xs=g.hist.filter(x=>x.w===w&&x.h===n), now=w===g.wind&&n===g.hand; h+=`<td class="${now?'now':''}">${xs.map(x=>`<span class="m ${x.win?'w':'l'} ${x.dealer&&real?'d':''}">${x.win?'胡'+x.tai:'流'}</span>`).join('')}</td>`; } h+='</tr>'; }
@@ -1260,7 +1262,7 @@ function renderWaits(info,ting,hitTile){
 function syncDealer(){
   const D=RULES.dealer, g=GSt; $('#dealerMode').value=D.mode; $('#streakOn').checked=D.allowStreak;
   if(!g) return; const dl=isDealer(g), b=$('#dealerBadge');
-  b.textContent=dl?'莊家':'閒家'; b.classList.toggle('on',dl);
+  b.textContent=`${dl?'莊家':'閒家'}/門風${WIND[seatWind(g)]}/${D.mode==='real'?WIND[g.seat]:'東'}位`; b.classList.toggle('on',dl);
 }
 function syncCat(){const o=catOpt();$('#ncat').disabled=o.fixed.length>0;$('#catNote').textContent='花色設定：'+catLabel(o,diffNow())+'＋花牌';$('#sim').textContent='';}
 function syncLegend(){
