@@ -266,6 +266,7 @@ header.hd{display:flex;align-items:flex-start;justify-content:space-between;gap:
 header.hd{align-items:baseline;justify-content:flex-start;gap:14px;flex-wrap:wrap}
 header.hd p{margin:0}
 #newGame[hidden]{display:none}
+.cell.dslot .gate.wait{color:var(--win)}
 </style>
 
 <div class="intro" id="intro" role="dialog" aria-modal="true" aria-labelledby="introT">
@@ -369,12 +370,12 @@ header.hd p{margin:0}
           <div><b>派對</b><span><span class="dk-slot" data-d="2"></span> · 固定當莊 · 每張花牌 1 台 · 底 50／台 20</span><em>試試手氣，紙呢？沒帶～</em></div>
           <div><b>推眼鏡</b><span><span class="dk-slot" data-d="3"></span> · 盤面小 · 槓牌區 · 抓位輪莊 · 只算正花 · 底 300／台 100</span><em>啤酒很冰很好喝唷，努力了一個月，犒賞辛苦的自己。一罐，就一罐，真的</em></div>
           <div><b>地獄</b><span><span class="dk-slot" data-d="4"></span> · 盤面小 · 槓牌區 · 抓位輪莊 · 只算正花 · 底 1000／台 500 · 可連跑 100 場</span><em>明天 8:30 要騎車過橋去上班，11:43 賴問我說調個簡單的版本，你對簡單的定義是，不會自己弄喔 不是說 AI 啥小很猛，還不就因為想去巴結小主管…..</em></div>
-          <div class="lv5" hidden><b>焦</b><span><span class="dk-slot" data-d="5"></span> · 盤面最小 · 槓牌區 · 開完 5-5 才判斷聽牌 · 抓位輪莊 · 只算正花 · 底 10000／台 5000 · 可連跑 200 場</span><em>天崩開局，胡牌請截圖</em></div>
+          <div class="lv5" hidden><b>焦</b><span><span class="dk-slot" data-d="5"></span> · 起手照台灣麻將：莊家 17 格、閒家 16 格（4-2 為莊家格） · 槓牌區 · 開完 5-5 才判斷聽牌 · 抓位輪莊 · 只算正花 · 底 10000／台 5000 · 可連跑 2,000 場</span><em>天崩開局，胡牌請截圖</em></div>
         </div>
         </details>
         <details class="sub">
           <summary>計分</summary>
-        <p>得分 ＝（底 ＋ 台數 × 每台）× 3，自摸三家付。每次胡牌都算門清自摸 3 台；停輪時就成胡型算開門即胡：莊家天胡 24 台、閒家地胡 16 台；停輪時只是聽牌、之後才胡，莊家算天聽 8 台、閒家算地聽 4 台，這時不計門清、只計自摸 1 台（推眼鏡只算聽牌區第一次摸牌就胡）。集齊春夏秋冬或梅蘭竹菊算花槓 2 台；摸到牌庫最後一張或彈珠最後一次重開胡牌算海底撈月 1 台。牌都是自己摸的，所以刻子都算暗刻（三暗刻 2 台、四暗刻 5 台、五暗刻 8 台，可與碰碰胡同時計算）；當莊加莊家台，連莊再加連 N 拉 N。抓位輪莊的模式只算正花（依你的門風），固定當莊的模式每張花牌都算 1 台。盤面有多種胡牌拆法時，自動選台數最高的那一種，用不到的牌會關閘。</p>
+        <p>得分 ＝（底 ＋ 台數 × 每台）× 3，自摸三家付。每次胡牌都算門清自摸 3 台；停輪時就成胡型算開門即胡：莊家天胡 24 台、閒家地胡 16 台（焦：閒家在 5-5 第一摸就自摸算地胡）；停輪時只是聽牌、之後才胡，莊家算天聽 8 台、閒家算地聽 4 台，這時不計門清、只計自摸 1 台（推眼鏡只算聽牌區第一次摸牌就胡）。集齊春夏秋冬或梅蘭竹菊算花槓 2 台；摸到牌庫最後一張或彈珠最後一次重開胡牌算海底撈月 1 台。牌都是自己摸的，所以刻子都算暗刻（三暗刻 2 台、四暗刻 5 台、五暗刻 8 台，可與碰碰胡同時計算）；當莊加莊家台，連莊再加連 N 拉 N。抓位輪莊的模式只算正花（依你的門風），固定當莊的模式每張花牌都算 1 台。盤面有多種胡牌拆法時，自動選台數最高的那一種，用不到的牌會關閘。</p>
         </details>
         <details class="sub">
           <summary>彈珠台</summary>
@@ -438,6 +439,8 @@ const DEFAULT_RULES={
   pachinko:{"modes":{"2":{"lit":"random5","weight":28},"4":{"lit":"random4","weight":30},"6":{"lit":"random3","weight":26},"8":{"lit":"random2","weight":16}},"maxReopen":8},
   highCheckRow:4,
   lateJudge:{"5":true},
+  // 起手照台灣麻將：莊家 17 張、閒家 16 張。閒家時這一格不開（顯示「莊」）
+  dealerCell:{"5":"4-2"},
   flowerCount:{"1":{"odd":6,"even":8}},
   dealer:{"mode":"assign","allowStreak":true,"otherDealerDrawRotate":true},
   gangShang:{"kongDraw":true,"flowerReplace":true,"ballReopen":true},
@@ -636,7 +639,8 @@ function playRound(d,opt,bonus=0,ctx={}){
   let high=false, groups=[], baxian=null, hand=null;
   rankCtx={d,flowers,realMode:!!ctx.real,round:ctx.round||0,seatWind:ctx.seatWind||0};
   const cellAt=(r,c)=>board[r+'-'+c];
-  for(let r=1;r<=5;r++)for(let c=1;c<=5;c++)board[r+'-'+c]={r,c,act:active(d,r,c),kslot:kongCell(d,r,c),tile:null,flower:null,seq:[],gate:0,kept:false};
+  const dCell=(RULES.dealerCell||{})[d];
+  for(let r=1;r<=5;r++)for(let c=1;c<=5;c++){ const dc=!ctx.dealer&&dCell===r+'-'+c; board[r+'-'+c]={r,c,act:active(d,r,c)&&!dc,dcell:dc,kslot:kongCell(d,r,c),tile:null,flower:null,seq:[],gate:0,kept:false}; }
   const kongSlots=Object.values(board).filter(x=>x.kslot).sort((a,b)=>a.r-b.r||a.c-b.c), KONG=kongSlots.length>0; let kongUsed=0;
   const fill=(cell,last)=>{
     let t=draw();
@@ -757,6 +761,7 @@ function playRound(d,opt,bonus=0,ctx={}){
   }
   if(R.win&&!R.winTiles&&(R.ting==='tianhu'||R.ting==='dihu'||R.ting==='complete')){ const w=hand&&hand.win?hand.win:findWin(cntOf(revealed),need); if(w) R.winTiles=w.map(([type,take])=>({type,m:take.map(tileOf)})); if(hand&&hand.cells) R.winCells=hand.cells.filter(x=>!x.hidden); }
   if((RULES.lateJudge||{})[d]&&R.ting4==='none'){ R.lateTile=pool.slice().reverse().find(t=>t.s!=='f')||null; }
+  if(dCell&&!ctx.dealer&&R.win&&R.ting==='ting'&&(R.huFrom==='normal'||R.huFrom==='flower')) R.diHuFirst=true;
   if(R.win&&R.ting==='ting') R.haidi=pool.length===0||(R.huFrom==='ball'&&R.extra.length===R.bonus);
   R.wait4Info=wait4Info; if(!R.waitInfo) R.waitInfo=wait4Info;
   R.groups=groups; R.poolTotal=poolTotal; R.poolLeft=pool.length;
@@ -778,13 +783,13 @@ function score(R){
   let gs=R.winTiles?R.winTiles.map(g=>({type:g.type,m:g.m.slice()})):R.groups.map(g=>({type:g.type,m:g.m.map(x=>x.t)}));
   const list=[], add=(n,k=1)=>{const v=(T[n]||0)*k; if(v) list.push([n+(k>1?' ×'+k:''),v]);};
   // 天胡、地胡可與其他台型疊加
-  if(R.ting==='tianhu') add('天胡'); else if(R.ting==='dihu') add('地胡');
+  if(R.ting==='tianhu') add('天胡'); else if(R.ting==='dihu'||R.diHuFirst) add('地胡');
   // 莊家 1 台；連 N 拉 N＝每連一次加「連莊拉莊」台數
   // 莊家胡牌一律視為門清自摸（台灣常見算法：門清 1＋自摸 1＋一摸三 1＝3 台）
   // 拉霸每次都是自己摸牌：莊家、閒家胡牌都算門清自摸
   // 天聽／地聽：停輪時就聽牌、之後在聽牌區胡牌；不計門清，只計自摸
   const firstOnly=(RULES.tingFirstDrawOnly||{})[R.d], firstDraw=R.huFrom==='normal'||R.huFrom==='flower';
-  if(R.ting==='ting'&&(!firstOnly||firstDraw)){ add(R.dealer?'天聽':'地聽'); add('自摸'); }
+  if(R.ting==='ting'&&!R.diHuFirst&&(!firstOnly||firstDraw)){ add(R.dealer?'天聽':'地聽'); add('自摸'); }
   else add('門清自摸');
   if(R.haidi) add('海底撈月');
   if(R.dealer){ add('莊家'); if(R.streak){ const v=(T['連莊拉莊']||0)*R.streak; if(v) list.push([`連${R.streak}拉${R.streak}`,v]); } }
@@ -1001,7 +1006,7 @@ window.addEventListener('resize',()=>{ if(!busy){const M=mapper(); drawField(geo
 const stats={n:0,t:0,w:0,s:0};
 let busy=false;
 /* 一局分成兩段：computeHand 先算完結果並推進局數、戰績（連跑也走這裡）；playHand 只負責播放動畫與顯示結果 */
-const UNLOCK={level:4,need:30,key:'thb_hell_tai',flag:'thb_lv5'};
+const UNLOCK={level:4,need:50,key:'thb_hell_tai',flag:'thb_lv5'};
 const lsGet=k=>{try{return localStorage.getItem(k);}catch(e){return null;}}, lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
 const lv5Open=()=>lsGet(UNLOCK.flag)==='1';
 function computeHand(d){
@@ -1021,7 +1026,8 @@ function refreshStats(){
 async function playHand(h){
   const d=h.d;
   layout(d); resetTray(); $('#tai').hidden=true; renderWaits(null,'roll');
-  const {L,G,balls,B,R}=h; setBins(L); binEls.forEach(x=>x.classList.remove('hit','miss')); const M=mapper();
+  const markDealerCell=R=>Object.values(R.board).filter(x=>x.dcell).forEach(x=>{ const el=els[x.r+'-'+x.c]; el.className='cell kslot dslot'; gate(el,'wait','莊'); });
+  const {L,G,balls,B,R}=h; markDealerCell(R); setBins(L); binEls.forEach(x=>x.classList.remove('hit','miss')); const M=mapper();
   log(`<b>彈珠台</b> 本局燈號 ${L.label}，亮燈格 ${L.lit.join('、')}，彈出 1 顆彈珠`);
   const ballP=animateBalls(G,M,balls.map(x=>x.path)).then(()=>{ balls.forEach(x=>binEls[x.slot].classList.add(L.lit.includes(x.slot+1)?'hit':'miss')); log(`<b>彈珠落在 ${balls[0].slot+1} 號格</b> · ${B.text}`); });
   $('#result').innerHTML='<span class="big">滾動中…</span>';
@@ -1130,23 +1136,29 @@ async function run(){
 /* 連跑：一次算完 N 場（局數、戰績照實累計），只回放有胡牌的場次；回放中其他開局按鈕鎖住 */
 let rpWait=null, rpSkip=false;
 async function runBatch(){
-  if(busy) return; const d=diffNow(), N=d===5?200:100; lockUI(true); rpSkip=false;
-  $('#result').innerHTML=`<span class="big">連跑 ${N} 場中…</span>`; $('#tai').hidden=true; renderWaits(null,'roll');
+  if(busy) return; const d=diffNow(), N=d===5?2000:100; lockUI(true); rpSkip=false;
+  $('#result').innerHTML=`<span class="big">連跑中 0／${N.toLocaleString()}</span>`; $('#tai').hidden=true; renderWaits(null,'roll');
   await new Promise(r=>setTimeout(r,60));
-  const hs=[]; let unlocked=false;
-  for(let i=0;i<N;i++){ const h=computeHand(d); h.no=i+1; hs.push(h); if(h.unlocked) unlocked=true; if(!h.R.win) log(`<b>連跑第 ${i+1} 場</b> ${h.lbl} · 流局 · ${h.gmsg}`); }
+  // 分批計算：每 100 場讓畫面更新一次進度，避免長時間卡住；只保留胡牌的場次供回放
+  const wins=[]; let unlocked=false, tings=0;
+  for(let i=0;i<N;i++){
+    const h=computeHand(d); h.no=i+1; if(h.unlocked) unlocked=true; if(h.R.ting4!=='none') tings++; if(h.R.win) wins.push(h);
+    if((i+1)%100===0&&i+1<N){ $('#result').innerHTML=`<span class="big">連跑中 ${(i+1).toLocaleString()}／${N.toLocaleString()}</span><span style="color:var(--muted)">已聽牌 ${tings} 次、胡牌 ${wins.length} 次</span>`; await new Promise(r=>setTimeout(r,0)); }
+  }
+  // 牌局紀錄只寫一行摘要；胡牌場次回放時再寫完整紀錄
+  log(`<b>連跑 ${N.toLocaleString()} 場</b>：聽牌 ${tings} 次、胡牌 ${wins.length} 次`);
   refreshStats();
-  const wins=hs.filter(h=>h.R.win), box=$('#batchBox');
+  const box=$('#batchBox');
   const title=h=>`${h.R.ting==='tianhu'?'天胡':h.R.ting==='dihu'?'地胡':h.R.ting==='baxian'?'八仙過海':'胡牌'} · ${h.R.tai} 台 · ${h.R.score.toLocaleString()} 分`;
   box.hidden=false;
   if(!wins.length){
-    box.innerHTML=`<b class="bh">連跑 ${N} 場：沒有胡牌</b>`;
-    $('#result').innerHTML=`<span class="big">${N} 場無胡牌</span><span style="color:var(--muted)">局數與戰績已累計，可以開新局。</span>`;
+    box.innerHTML=`<b class="bh">連跑 ${N.toLocaleString()} 場：沒有胡牌</b>`;
+    $('#result').innerHTML=`<span class="big">${N.toLocaleString()} 場無胡牌</span><span style="color:var(--muted)">局數與戰績已累計，可以開新局。</span>`;
     $('#waitBox').innerHTML='<span class="wait-empty">拉下手柄開始</span>';
     if(unlocked) await announceUnlock();
     lockUI(false); return;
   }
-  box.innerHTML=`<b class="bh">連跑 ${N} 場：胡 ${wins.length} 場</b><ol>${wins.map(h=>`<li>第 ${h.no} 場 · ${h.lbl} · ${title(h)}</li>`).join('')}</ol>`;
+  box.innerHTML=`<b class="bh">連跑 ${N.toLocaleString()} 場：胡 ${wins.length} 場</b><ol>${wins.map(h=>`<li>第 ${h.no} 場 · ${h.lbl} · ${title(h)}</li>`).join('')}</ol>`;
   const lis=[...box.querySelectorAll('li')];
   $('#skipBtn').hidden=false; $('#skipBtn').disabled=false;
   for(const [k,h] of wins.entries()){
@@ -1302,7 +1314,7 @@ const DK={z:['發','','t-z6','大字'],m:['九','萬','t-m','萬'],p:['九','筒
 const deckHTML=(d,lead)=>{ const one=c=>{const [a,b,k,n]=DK[c];return `<span class="dk" title="${n}"><span class="mt ${k}" role="img" aria-label="${n}"><b>${a}</b>${b?`<i>${b}</i>`:''}</span></span>`;}; return `<span class="dkl">${lead?`<span>${lead}</span>`:''}${DECKS[d].map(one).join('')}<span class="op">＋</span>${one('f')}</span>`; };
 const LVINFO={1:{deck:'大字＋花牌',spec:'牌庫只用：大字＋花牌',sub:'奶油桂花手'},2:{deck:'大字、萬＋花牌',spec:'牌庫只用：大字、萬＋花牌',sub:'試試手氣，紙呢？沒帶～'},3:{deck:'大字、萬、筒＋花牌',spec:'牌庫只用：大字、萬、筒＋花牌',sub:'啤酒很冰很好喝唷，努力了一個月，犒賞辛苦的自己。一罐，就一罐，真的'},4:{deck:'大字、萬、筒＋花牌',spec:'牌庫只用：大字、萬、筒＋花牌 · 盤面小',sub:'明天 8:30 要騎車過橋去上班，11:43 賴問我說調個簡單的版本，你對簡單的定義是，不會自己弄喔 不是說 AI 啥小很猛，還不就因為想去巴結小主管…..'},5:{deck:'大字、萬、筒、條＋花牌',spec:'牌庫只用：大字、萬、筒、條＋花牌 · 盤面小',sub:'天崩開局，胡牌請截圖'}};
 function syncLv5(){ const on=lv5Open(); document.querySelectorAll('.lv5').forEach(e=>e.hidden=!on); renderIntroLv(); }
-function syncBatch(){ const d=diffNow(), b=$('#batchBtn'); b.hidden=!(d===4||d===5); b.textContent=d===5?'連跑 200 場':'連跑 100 場'; }
+function syncBatch(){ const d=diffNow(), b=$('#batchBtn'); b.hidden=!(d===4||d===5); b.textContent=d===5?'連跑 2,000 場':'連跑 100 場'; }
 function fillDeckSlots(){ document.querySelectorAll('.dk-slot').forEach(el=>{ el.innerHTML=deckHTML(+el.dataset.d,'牌庫：'); }); }
 function renderIntroLv(){
   const box=$('#introLv'); if(!box) return; const cur=diffNow();
