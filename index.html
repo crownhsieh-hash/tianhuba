@@ -249,12 +249,14 @@ textarea:focus-visible{outline:2px solid var(--win);outline-offset:1px}
 .hand-box .ht i{font-size:10.5px!important;margin-top:0!important}
 /* 標題列：右側「玩法規則」按鈕，按下在標題下方展開說明 */
 header.hd{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.rules-btn{flex:0 0 auto;margin-top:4px}
+.rules-btn{flex:0 0 auto;margin-left:auto}
 .rules-btn[aria-expanded="true"]{border-color:var(--win);color:var(--win)}
 .rules-panel .rules-fold>summary{display:none}
 .rules-panel .rules-fold{margin:0}
 .ctlpanel .infobar{margin-top:0}
-.ctrl-under{margin:14px 0 0;padding-top:12px;border-top:1px dashed var(--line)}
+.ctrl-under{margin:14px 0 0;padding-top:12px;border-top:1px dashed var(--line);gap:8px}
+.ctrl-under .rules-btn{padding-left:12px;padding-right:12px}
+.ctrl-under .seg label{padding-left:8px;padding-right:8px}.ctrl-under #newGame{padding-left:10px;padding-right:10px}
 .fold .st-cum{display:block;margin:8px 0 6px;padding:0 0 6px;border-top:0;border-bottom:1px dashed var(--line)}
 </style>
 
@@ -300,7 +302,39 @@ header.hd{display:flex;align-items:flex-start;justify-content:space-between;gap:
   </section>
 
   <div class="side">
-  <header class="hd"><div><h1>天胡霸</h1><p>麻將 × 拉霸</p></div><button id="rulesBtn" class="rules-btn" aria-expanded="false" aria-controls="rulesPanel">玩法規則</button></header>
+  <header class="hd"><div><h1>天胡霸</h1><p>麻將 × 拉霸</p></div></header>
+  <section class="panel ctlpanel" aria-label="模式與牌局資訊">
+    <div class="legend" hidden></div>
+    <div class="infobar" aria-label="牌局資訊">
+      <b id="stRound">東風 東 1 局</b><span class="badge" id="dealerBadge"></span><span class="badge" id="stHonba">連 0</span><span class="st-j" id="stJiang">第 1 將</span>
+      <span class="st-seat" id="stSeat"></span>
+    </div>
+  </section>
+
+  <section class="panel actpanel" aria-label="聽牌與拉霸">
+    <section class="status" style="margin-top:0" aria-label="狀態區">
+      <div class="st-wait">
+        <div class="wait-box" id="waitBox"><span class="wait-empty">拉下手柄開始</span></div>
+      </div>
+    </section>
+
+    <div style="margin-top:12px"><button id="pull">拉 下 手 柄</button></div>
+    <div class="batch-row"><button id="batchBtn" hidden>連跑 100 場</button><button id="skipBtn" hidden>略過回放</button></div>
+    <div class="ctrl ctrl-under">
+      <span class="lv-t" id="lvTitle">難度等級</span>
+      <div class="seg" role="radiogroup" aria-labelledby="lvTitle">
+        <input type="radio" name="diff" id="d1" value="1"><label for="d1">天使</label>
+        <input type="radio" name="diff" id="d2" value="2" checked><label for="d2">派對</label>
+        <input type="radio" name="diff" id="d3" value="3"><label for="d3">推眼鏡</label>
+        <input type="radio" name="diff" id="d4" value="4"><label for="d4">地獄</label>
+        <input type="radio" name="diff" id="d5" value="5" class="lv5" hidden><label for="d5" class="lv5" hidden>焦</label>
+      </div>
+      <button id="newGame">重新開局</button>
+      <label class="chk"><input type="checkbox" id="fast"> 加速</label>
+      <button id="rulesBtn" class="rules-btn" aria-expanded="false" aria-controls="rulesPanel">玩法規則</button>
+    </div>
+  </section>
+
   <section class="panel rules-panel" id="rulesWrap" hidden>
     <details class="fold rules-fold" id="rulesPanel">
       <summary>玩法與規則說明</summary>
@@ -329,35 +363,6 @@ header.hd{display:flex;align-items:flex-start;justify-content:space-between;gap:
         </details>
       </div>
     </details>
-  </section>
-  <section class="panel ctlpanel" aria-label="模式與牌局資訊">
-    <div class="legend" hidden></div>
-    <div class="infobar" aria-label="牌局資訊">
-      <b id="stRound">東風 東 1 局</b><span class="badge" id="dealerBadge"></span><span class="badge" id="stHonba">連 0</span><span class="st-j" id="stJiang">第 1 將</span>
-      <span class="st-seat" id="stSeat"></span>
-    </div>
-  </section>
-
-  <section class="panel actpanel" aria-label="聽牌與拉霸">
-    <section class="status" style="margin-top:0" aria-label="狀態區">
-      <div class="st-wait">
-        <div class="wait-box" id="waitBox"><span class="wait-empty">拉下手柄開始</span></div>
-      </div>
-    </section>
-    <div style="margin-top:12px"><button id="pull">拉 下 手 柄</button></div>
-    <div class="batch-row"><button id="batchBtn" hidden>連跑 100 場</button><button id="skipBtn" hidden>略過回放</button></div>
-    <div class="ctrl ctrl-under">
-      <span class="lv-t" id="lvTitle">難度等級</span>
-      <div class="seg" role="radiogroup" aria-labelledby="lvTitle">
-        <input type="radio" name="diff" id="d1" value="1"><label for="d1">天使</label>
-        <input type="radio" name="diff" id="d2" value="2" checked><label for="d2">派對</label>
-        <input type="radio" name="diff" id="d3" value="3"><label for="d3">推眼鏡</label>
-        <input type="radio" name="diff" id="d4" value="4"><label for="d4">地獄</label>
-        <input type="radio" name="diff" id="d5" value="5" class="lv5" hidden><label for="d5" class="lv5" hidden>焦</label>
-      </div>
-      <button id="newGame">重新開局</button>
-      <label class="chk"><input type="checkbox" id="fast"> 加速</label>
-    </div>
   </section>
 
   <section class="panel">
