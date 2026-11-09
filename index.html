@@ -103,7 +103,7 @@ button:disabled{opacity:.45;cursor:default}
 .t-z5{color:var(--man)} .t-z6{color:var(--sou)} .t-z7{color:var(--pin)}
 .tag{position:absolute;top:3px;left:4px;font-size:9px;font-style:normal;color:#8a8270;font-family:var(--f-ui);z-index:2}
 .cell.kept{box-shadow:inset 0 -3px 0 var(--ivory-dim),inset 0 0 0 2px var(--win)}
-.gate{position:absolute;inset:0;transform:translateY(-102%);transition:transform .18s ease-in;display:grid;place-items:center;z-index:3;font-size:11px;font-weight:700;color:#fff;text-align:center}
+.gate{position:absolute;inset:0;transform:translateY(-102%);transition:transform .18s ease-in;display:grid;place-items:center;z-index:3;font-size:clamp(12px,3.4vw,17px);font-weight:700;color:#fff;text-align:center;white-space:pre-line;line-height:1.3;letter-spacing:.15em;padding-left:.15em}
 .cell.closed .gate{transform:none}
 .gate.l1{background:repeating-linear-gradient(90deg,var(--g1) 0 9px,#6a4a2c 9px 11px)}
 .gate.l2{background:repeating-linear-gradient(90deg,var(--g2) 0 4px,#4e565d 4px 7px)}
@@ -183,9 +183,6 @@ textarea:focus-visible{outline:2px solid var(--win);outline-offset:1px}
 .lv-t{font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.06em;white-space:nowrap}
 .wt .tf.t-m,.wt .tf.t-z5{color:var(--man)}.wt .tf.t-p,.wt .tf.t-z7{color:var(--pin)}.wt .tf.t-s,.wt .tf.t-z6{color:var(--sou)}
 @media (prefers-reduced-motion:reduce){.gate,.banner{transition:none}.slot.on{animation:none}}
-/* 八仙過海提早成立：還沒停的格子不再開牌，顯示「未開」（與綠色的尚未拉霸區分） */
-.cell.unopened{background:#1c201e;box-shadow:inset 0 0 0 1px #3a403c}
-.cell.unopened::after{content:"未開";position:absolute;inset:0;display:grid;place-items:center;font-size:12px;color:#8d968f;letter-spacing:.1em}
 /* 胡牌候選：同一種聽牌拆法的候選牌用框線包成一組 */
 .wait-box:has(.wgrp){row-gap:16px;column-gap:10px;padding-top:4px}
 .wgrp{display:flex;flex-wrap:wrap;gap:6px;padding:9px 8px 6px;border:2px solid #7fae97;border-radius:9px;background:rgba(127,174,151,.08);position:relative}
@@ -195,15 +192,28 @@ textarea:focus-visible{outline:2px solid var(--win);outline-offset:1px}
 .intro-card{max-width:500px;max-height:calc(100vh - 32px);overflow:auto;text-align:left}
 .intro-card h2{text-align:center;margin-bottom:2px}
 .intro-sub{text-align:center!important;color:var(--muted)!important;font-size:13px!important;margin:0 0 14px!important}
-.intro-now{display:grid;justify-items:center;gap:2px;margin:0 0 14px;padding:10px 12px;border:1px solid var(--win);border-radius:10px;background:rgba(230,194,90,.08)}
+.intro-now{display:grid;justify-items:center;gap:8px;margin:0 0 14px;padding:10px 12px;border:1px solid var(--win);border-radius:10px;background:rgba(230,194,90,.08)}
 .intro-now small{font-size:15px;color:var(--muted);letter-spacing:.12em}
 .intro-now b{font-family:var(--f-tile);font-size:30px;color:var(--win);letter-spacing:.12em}
 .intro-now em{font-style:normal;font-size:13px;color:var(--text);text-align:center;line-height:1.5}
+.intro-now .in-row{display:flex;align-items:baseline;gap:10px}
+/* 牌庫介紹：每一類用一張代表牌（大字＝發、萬＝九萬、筒＝四筒、條＝六條、花牌＝梅） */
+.dkl{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px 4px;vertical-align:middle;font-size:13px;color:var(--text)}
+.dkl .op{color:var(--muted);padding:0 1px}
+.dk{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.mt{width:24px;height:32px;border-radius:4px;background:var(--ivory);box-shadow:inset 0 -2px 0 var(--ivory-dim),0 1px 2px rgba(0,0,0,.35);display:grid;place-items:center;align-content:center;font-family:var(--f-tile);line-height:1;color:var(--ink)}
+.mt b{font-size:15px;font-weight:700}.mt i{font-style:normal;font-size:9px;margin-top:1px;display:block}
+.mt.t-z6,.mt.t-s{color:var(--sou)}.mt.t-m{color:var(--man)}.mt.t-p{color:var(--pin)}.mt.t-f{color:var(--hua)}
+.dkl .mt b{color:inherit!important;font-family:var(--f-tile);font-size:15px;letter-spacing:0;grid-row:auto;align-self:auto}
+.intro-now .dkl .mt b{font-size:17px}
+.intro-now .mt{width:28px;height:37px}.intro-now .mt b{font-size:17px}.intro-now .dkl{justify-content:center;font-size:14px}
 .intro-card>p{margin-bottom:14px}
 .intro-lv{display:grid;gap:6px;margin:0 0 18px}
 .intro-lv button{display:grid;grid-template-columns:4.4em minmax(0,1fr);align-items:center;gap:0 10px;text-align:left;padding:8px 10px;border-radius:9px;background:var(--felt);border:1px solid var(--line);color:var(--text);font-size:13px;line-height:1.45}
 .intro-lv button b{font-family:var(--f-tile);font-size:17px;align-self:center}
 .intro-lv button span{color:var(--muted);font-size:13px}
+.intro-lv button .dkl{color:var(--text)}
+.lv-list .dkl{gap:3px;margin:2px 0}.lv-list .mt{width:20px;height:27px}.lv-list .dkl .mt b{font-size:13px}.lv-list .mt i{font-size:8px}
 .intro-lv button em{font-style:normal;font-size:12px;color:var(--text);min-width:0}
 .intro-lv button[aria-checked="true"]{border-color:var(--win);box-shadow:0 0 0 1px var(--win);background:rgba(230,194,90,.1)}
 .intro-lv button[aria-checked="true"] b{color:var(--win)}
@@ -226,15 +236,17 @@ textarea:focus-visible{outline:2px solid var(--win);outline-offset:1px}
 .hand-box .ht.t-m,.hand-box .ht.t-z5{color:var(--man)}.hand-box .ht.t-p,.hand-box .ht.t-z7{color:var(--pin)}.hand-box .ht.t-s,.hand-box .ht.t-z6{color:var(--sou)}.hand-box .ht.t-f{color:var(--hua)}
 .hand-box .ht.hu{transform:translateY(-6px);box-shadow:0 0 0 2px var(--win),0 4px 10px rgba(230,194,90,.45)}
 .hand-box .ht.hu::before{content:"胡";position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;color:var(--win);font-family:var(--f-ui)}
+/* 橫排框線（白色 3px＋微光，往下滑動 0.25 秒；之後換特效改這裡） */
+.row-frame{position:absolute;z-index:4;pointer-events:none;border:3px solid #fff;border-radius:9px;box-shadow:0 0 10px rgba(255,255,255,.55),inset 0 0 6px rgba(255,255,255,.25);transition:left .25s ease,top .25s ease,width .25s ease,height .25s ease}
 </style>
 
 <div class="intro" id="intro" role="dialog" aria-modal="true" aria-labelledby="introT">
   <div class="intro-card">
     <button class="intro-x" id="introX" aria-label="關閉提示">×</button>
     <h2 id="introT">天胡霸</h2>
-    <p class="intro-sub">台灣麻將 × 拉霸</p>
-    <div class="intro-now"><small>目前難度</small><b id="introNow">天使</b><em id="introNowSub"></em></div>
-    <p>拉下手柄，盤面的牌會一排一排停下來。湊不成組的牌會被蓋住，湊得齊就「聽牌」，再摸到要的那張就胡牌。台數越高，分數越多。</p>
+    <p class="intro-sub">麻將 × 拉霸</p>
+    <div class="intro-now"><div class="in-row"><small>難度</small><b id="introNow">派對</b></div><div class="in-deck" id="introDeck"></div><em id="introNowSub"></em></div>
+    <p>啟動拉霸，盤面的牌會一排一排停下來。湊不成組的牌會被蓋住，湊得齊就「聽牌」，再摸到要的那張就胡牌。台數越高，分數越多。</p>
     <div class="intro-lv" id="introLv" role="radiogroup" aria-label="選擇難度"></div>
     <button class="intro-go" id="introGo">拉下天胡霸</button>
   </div>
@@ -262,7 +274,7 @@ textarea:focus-visible{outline:2px solid var(--win);outline-offset:1px}
     </div>
     <div class="tray" id="tray" aria-label="已出現的花牌"><span class="tray-l">花牌</span></div>
     <div class="field" id="field">
-      <div class="board" id="board"><div class="banner" id="banner"></div></div>
+      <div class="board" id="board"><div class="row-frame" id="rowFrame" hidden></div><div class="banner" id="banner"></div></div>
       <div class="bins" id="bins" aria-label="彈珠落點"></div>
       <canvas id="pachi" aria-hidden="true"></canvas>
     </div>
@@ -270,13 +282,13 @@ textarea:focus-visible{outline:2px solid var(--win);outline-offset:1px}
   </section>
 
   <div class="side">
-  <header><h1>天胡霸</h1><p>台灣麻將 × 拉霸 × 彈珠台</p></header>
+  <header><h1>天胡霸</h1><p>台灣麻將 × 拉霸</p></header>
   <section class="panel ctlpanel" aria-label="模式與牌局資訊">
     <div class="ctrl" style="margin-bottom:0">
       <span class="lv-t" id="lvTitle">難度等級</span>
       <div class="seg" role="radiogroup" aria-labelledby="lvTitle">
-        <input type="radio" name="diff" id="d1" value="1" checked><label for="d1">天使</label>
-        <input type="radio" name="diff" id="d2" value="2"><label for="d2">派對</label>
+        <input type="radio" name="diff" id="d1" value="1"><label for="d1">天使</label>
+        <input type="radio" name="diff" id="d2" value="2" checked><label for="d2">派對</label>
         <input type="radio" name="diff" id="d3" value="3"><label for="d3">推眼鏡</label>
         <input type="radio" name="diff" id="d4" value="4"><label for="d4">地獄</label>
         <input type="radio" name="diff" id="d5" value="5" class="lv5" hidden><label for="d5" class="lv5" hidden>焦</label>
@@ -289,16 +301,16 @@ textarea:focus-visible{outline:2px solid var(--win);outline-offset:1px}
       <div class="rb">
         <details class="sub" open>
           <summary>怎麼玩</summary>
-        <p>拉下手柄後，格子由上而下停下。全部停止後，湊不成組的牌會關上閘門；只要聽牌，就開聽牌區，摸到聽牌張就胡牌。胡牌使用台灣麻將規則，花牌開出時會當場補花。</p>
+        <p>啟動拉霸，盤面的牌會一排一排停下來。湊不成組的牌會被蓋住，湊得齊就「聽牌」，再摸到要的那張就胡牌。台數越高，分數越多。花牌開出時會當場補花，胡牌使用台灣麻將規則。</p>
         </details>
         <details class="sub">
           <summary>難度模式</summary>
         <div class="lv-list">
-          <div><b>天使</b><span>固定當莊 · 每張花牌 1 台 · 底 50／台 20 · 5×5 盤面 · 大字＋花牌</span><em>奶油桂花手</em></div>
-          <div><b>派對</b><span>固定當莊 · 每張花牌 1 台 · 底 50／台 20 · 5×5 盤面 · 大字、萬＋花牌</span><em>紙呢？</em></div>
-          <div><b>推眼鏡</b><span>抓位輪莊 · 只算正花 · 底 300／台 100 · 5×5 盤面 · 大字、萬、筒＋花牌</span><em>啤酒很冰很好喝唷，努力了一個月，犒賞辛苦的自己。一罐，就一罐，真的</em></div>
-          <div><b>地獄</b><span>抓位輪莊 · 只算正花 · 底 1000／台 500 · 5×4 盤面 · 大字、萬、筒＋花牌</span><em>明天 8:30 要騎車過橋去上班，11:43 賴問我說調個簡單的版本，你對簡單的定義是，不會自己弄喔 不是說 AI 啥小很猛，還不就因為想去巴結小主管…..</em></div>
-          <div class="lv5" hidden><b>焦</b><span>抓位輪莊 · 只算正花 · 底 1000／台 500 · 5×4 盤面 · 大字、萬、筒、條＋花牌</span><em>天崩開局，胡牌請截圖</em></div>
+          <div><b>天使</b><span><span class="dk-slot" data-d="1"></span> · 固定當莊 · 每張花牌 1 台 · 底 50／台 20</span><em>奶油桂花手</em></div>
+          <div><b>派對</b><span><span class="dk-slot" data-d="2"></span> · 固定當莊 · 每張花牌 1 台 · 底 50／台 20</span><em>試試手氣，紙呢？沒帶～</em></div>
+          <div><b>推眼鏡</b><span><span class="dk-slot" data-d="3"></span> · 抓位輪莊 · 只算正花 · 底 300／台 100</span><em>啤酒很冰很好喝唷，努力了一個月，犒賞辛苦的自己。一罐，就一罐，真的</em></div>
+          <div><b>地獄</b><span><span class="dk-slot" data-d="4"></span> · 盤面小 · 抓位輪莊 · 只算正花 · 底 1000／台 500 · 可連跑 20 場</span><em>明天 8:30 要騎車過橋去上班，11:43 賴問我說調個簡單的版本，你對簡單的定義是，不會自己弄喔 不是說 AI 啥小很猛，還不就因為想去巴結小主管…..</em></div>
+          <div class="lv5" hidden><b>焦</b><span><span class="dk-slot" data-d="5"></span> · 盤面小 · 抓位輪莊 · 只算正花 · 底 1000／台 500 · 可連跑 100 場</span><em>天崩開局，胡牌請截圖</em></div>
         </div>
         </details>
         <details class="sub">
@@ -810,7 +822,27 @@ const openGate=el=>el.classList.remove('closed');
 const log=html=>{const li=document.createElement('li');li.innerHTML=html;const ol=$('#log');ol.prepend(li);while(ol.children.length>40)ol.lastChild.remove();};
 const show=async(text,bad,ms=900)=>{banner.textContent=text;banner.classList.toggle('bad',!!bad);banner.classList.add('show');await sleep(ms);banner.classList.remove('show');};
 
+/* 橫排框線：標示「目前正在等它停下」的那一排，依序往下滑；聽牌後框住聽牌區。
+   獨立元件，之後要換特效只改 .row-frame 的樣式即可。 */
+const SHOW_FRAME=false; // 目前不使用框線；改成 true 即恢復
+let frameCur=null;
+function frameTo(keys){
+  const f=$('#rowFrame'); frameCur=SHOW_FRAME&&keys&&keys.length?keys:null;
+  if(!frameCur){ f.hidden=true; f.classList.remove('on'); return; }
+  const rs=frameCur.map(k=>els[k]), pad=5;
+  const L=Math.min(...rs.map(e=>e.offsetLeft)), T=Math.min(...rs.map(e=>e.offsetTop));
+  const R=Math.max(...rs.map(e=>e.offsetLeft+e.offsetWidth)), B=Math.max(...rs.map(e=>e.offsetTop+e.offsetHeight));
+  const first=f.hidden; if(first){ f.style.transition='none'; }
+  Object.assign(f.style,{left:(L-pad)+'px',top:(T-pad)+'px',width:(R-L+pad*2)+'px',height:(B-T+pad*2)+'px'});
+  if(first){ f.hidden=false; void f.offsetWidth; f.style.transition=''; }
+  f.classList.add('on');
+}
+const frameOff=()=>frameTo(null);
+const rowKeys=(R,r)=>[1,2,3,4,5].filter(c=>R.board[r+'-'+c].act&&!isHu(r,c)).map(c=>r+'-'+c);
+const huKey=()=>huRC().join('-');
+window.addEventListener('resize',()=>{ if(frameCur) frameTo(frameCur); });
 function layout(d){
+  frameOff();
   for(let r=1;r<=5;r++)for(let c=1;c<=5;c++){
     const el=els[r+'-'+c], a=active(d,r,c);
     el.className='cell'+(a?'':' off')+(!a&&r===4&&c===5?' var':'')+(a&&isHu(r,c)?' hu':'')+(a?' idle':'');
@@ -944,20 +976,26 @@ async function playHand(h){
   disp=shuffle(R.cats.flatMap(s=>Array.from({length:s==='z'?7:9},(_,i)=>({s,n:i+1}))));
   log(`<b>新局</b> ${RS().name} · 胡牌需 ${RS().meldsNeeded} 組面子＋1 對眼 · ${lvName(d)} · 花色 ${R.cats.map(c=>CAT[c]).join('、')}`);
   startTicker();
-  for(let c=1;c<=5;c++){ for(let r=1;r<=preRows(d);r++) if(R.board[r+'-'+c].act&&!isHu(r,c)) spin(els[r+'-'+c]); await sleep(90); }
+  // 只有框線所在的那一排在轉，其餘還沒輪到的排維持綠色牌背
+  const r0=R.steps.length?R.steps[0].r:1;
+  frameTo(rowKeys(R,r0));
+  for(let c=1;c<=5;c++){ if(R.board[r0+'-'+c].act&&!isHu(r0,c)) spin(els[r0+'-'+c]); await sleep(90); }
   for(const st of R.steps){
+    frameTo(rowKeys(R,st.r)); rowKeys(R,st.r).forEach(k=>{ const el=els[k]; if(el.classList.contains('idle')) spin(el); });
     await sleep(420);
     await revealStep(st,`第 ${st.r} 橫條停止`);
     if(st.raised){ const [hr,hc]=huRC(); gate(els[hr+'-'+hc],RULES.gates.high,RULES.gates.high+'級\n聽牌區'); await show(`可能 ${RULES.highTai} 台以上`,false,800); log(`<b>第 ${st.r} 橫條 · 可能 ${RULES.highTai} 台以上</b>，聽牌區閘門升為 ${RULES.gates.high} 級`); }
   }
   stopTicker();
-  if(R.ting4==='baxian') document.querySelectorAll('.cell.spinning').forEach(el=>{el.classList.remove('spinning');el.classList.add('unopened');el.firstChild.firstChild.textContent='';el.firstChild.lastChild.textContent='';});
+  if(R.ting4==='baxian') document.querySelectorAll('.cell.spinning').forEach(el=>{halt(el);el.classList.add('idle');el.firstChild.firstChild.textContent='';el.firstChild.lastChild.textContent='';});
   await sleep(250);
   const T={baxian:'八仙過海！',tianhu:'天胡！',dihu:'地胡！',ting:'聽牌',none:'未聽牌',complete:'成胡！'};
   const wl=(w,info)=>w.length?' · 聽 '+(info||[]).map(x=>name(x.t)+(x.type?'（'+x.type+'）':'')).join(' '):'';
   renderWaits(R.wait4Info,R.ting4);
   log(`<b>聽牌判定（${R.lastLabel} 開牌後）</b> ${T[R.ting4]}${wl(R.waits4,R.wait4Info)}${R.ting4==='none'&&R.short4>0?' · 面子還差 '+R.short4+' 組':''}`);
   await show(T[R.ting4],R.ting4==='none',R.ting4==='tianhu'||R.ting4==='dihu'||R.ting4==='baxian'?1600:900);
+  // 框線：聽牌→框聽牌區（或先框 5-1～5-4）；八仙停在原排；未聽牌、停輪即胡→消失
+  if(R.ting4==='ting') frameTo(R.step5?rowKeys(R,5):[huKey()]); else if(R.ting4!=='baxian') frameOff();
   if(R.step5){
     R.step5.cells.forEach(x=>{const el=E(x);openGate(el);spin(el);});
     startTicker(); await sleep(700);
@@ -966,6 +1004,7 @@ async function playHand(h){
     renderWaits(R.waitInfo,R.ting);
     log(`<b>聽牌判定（5-1～5-4 開牌後）</b> ${R.ting==='none'?'不再聽牌':T[R.ting]}${wl(R.waits,R.waitInfo)}`);
     await show(R.ting==='none'?'聽牌破局':T[R.ting],R.ting==='none',900);
+    frameTo(R.ting==='ting'?[huKey()]:null);
   }
   await ballP;
   if(R.hu){
@@ -1194,14 +1233,20 @@ $('#skipBtn').addEventListener('click',()=>{ rpSkip=true; $('#skipBtn').disabled
 $('#simBtn').addEventListener('click',simulate);
 // 開啟網頁時的提示框：「拉下天胡霸」關閉提示並直接拉下手柄
 /* 難度說明（歡迎框與規則說明共用） */
-const LVINFO={1:{deck:'大字＋花牌',spec:'牌庫只用：大字＋花牌',sub:'奶油桂花手'},2:{deck:'大字、萬＋花牌',spec:'牌庫只用：大字、萬＋花牌',sub:'紙呢？'},3:{deck:'大字、萬、筒＋花牌',spec:'牌庫只用：大字、萬、筒＋花牌',sub:'啤酒很冰很好喝唷，努力了一個月，犒賞辛苦的自己。一罐，就一罐，真的'},4:{deck:'大字、萬、筒＋花牌',spec:'牌庫只用：大字、萬、筒＋花牌 · 盤面小',sub:'明天 8:30 要騎車過橋去上班，11:43 賴問我說調個簡單的版本，你對簡單的定義是，不會自己弄喔 不是說 AI 啥小很猛，還不就因為想去巴結小主管…..'},5:{deck:'大字、萬、筒、條＋花牌',spec:'牌庫只用：大字、萬、筒、條＋花牌 · 盤面小',sub:'天崩開局，胡牌請截圖'}};
+const DECKS={1:['z'],2:['z','m'],3:['z','m','p'],4:['z','m','p'],5:['z','m','p','s']};
+const DK={z:['發','','t-z6','大字'],m:['九','萬','t-m','萬'],p:['四','筒','t-p','筒'],s:['六','條','t-s','條'],f:['梅','','t-f','花牌']};
+const deckHTML=(d,lead)=>{ const one=c=>{const [a,b,k,n]=DK[c];return `<span class="dk" title="${n}"><span class="mt ${k}" role="img" aria-label="${n}"><b>${a}</b>${b?`<i>${b}</i>`:''}</span></span>`;}; return `<span class="dkl">${lead?`<span>${lead}</span>`:''}${DECKS[d].map(one).join('')}<span class="op">＋</span>${one('f')}</span>`; };
+const LVINFO={1:{deck:'大字＋花牌',spec:'牌庫只用：大字＋花牌',sub:'奶油桂花手'},2:{deck:'大字、萬＋花牌',spec:'牌庫只用：大字、萬＋花牌',sub:'試試手氣，紙呢？沒帶～'},3:{deck:'大字、萬、筒＋花牌',spec:'牌庫只用：大字、萬、筒＋花牌',sub:'啤酒很冰很好喝唷，努力了一個月，犒賞辛苦的自己。一罐，就一罐，真的'},4:{deck:'大字、萬、筒＋花牌',spec:'牌庫只用：大字、萬、筒＋花牌 · 盤面小',sub:'明天 8:30 要騎車過橋去上班，11:43 賴問我說調個簡單的版本，你對簡單的定義是，不會自己弄喔 不是說 AI 啥小很猛，還不就因為想去巴結小主管…..'},5:{deck:'大字、萬、筒、條＋花牌',spec:'牌庫只用：大字、萬、筒、條＋花牌 · 盤面小',sub:'天崩開局，胡牌請截圖'}};
 function syncLv5(){ const on=lv5Open(); document.querySelectorAll('.lv5').forEach(e=>e.hidden=!on); renderIntroLv(); }
 function syncBatch(){ const d=diffNow(), b=$('#batchBtn'); b.hidden=!(d===4||d===5); b.textContent=d===5?'連跑 100 場':'連跑 20 場'; }
+function fillDeckSlots(){ document.querySelectorAll('.dk-slot').forEach(el=>{ el.innerHTML=deckHTML(+el.dataset.d,'牌庫：'); }); }
 function renderIntroLv(){
   const box=$('#introLv'); if(!box) return; const cur=diffNow();
-  const ids=[1,2,3,4].concat(lv5Open()?[5]:[]);
-  box.innerHTML=ids.map(d=>`<button type="button" role="radio" aria-checked="${d===cur}" data-d="${d}"><b>${lvName(d)}</b><span>${LVINFO[d].spec}</span></button>`).join('');
-  $('#introNow').textContent=lvName(cur); $('#introNowSub').textContent=`使用牌組：${LVINFO[cur].deck}。${LVINFO[cur].sub}`;
+  // 歡迎框不列出焦局（解鎖後仍只在上方難度按鈕出現）
+  const ids=[1,2,3,4];
+  box.innerHTML=ids.map(d=>`<button type="button" role="radio" aria-checked="${d===cur}" data-d="${d}"><b>${lvName(d)}</b>${deckHTML(d,'牌庫內容：')}</button>`).join('');
+  $('#introNow').textContent=lvName(cur);
+  $('#introDeck').innerHTML=cur===5?'':deckHTML(cur,'牌組：'); $('#introNowSub').textContent=cur===5?'':LVINFO[cur].sub;
 }
 const introEl=$('#intro'), closeIntro=()=>{ introEl.hidden=true; };
 $('#introLv').addEventListener('click',e=>{ const b=e.target.closest('button[data-d]'); if(!b||busy) return; const r=document.querySelector(`input[name=diff][value="${b.dataset.d}"]`); if(r.checked) return; r.checked=true; applyLevel(false); });
@@ -1210,7 +1255,7 @@ $('#introGo').addEventListener('click',()=>{ closeIntro(); $('#pull').click(); }
 introEl.addEventListener('click',e=>{ if(e.target===introEl) closeIntro(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!introEl.hidden) closeIntro(); });
 requestAnimationFrame(()=>$('#introGo').focus());
-syncLv5(); GSt=newGame(); syncLevels(); applyLevel(true); renderStatus(); showRules(); layout(diffNow()); syncCat(); syncLegend();
+fillDeckSlots(); syncLv5(); GSt=newGame(); syncLevels(); applyLevel(true); renderStatus(); showRules(); layout(diffNow()); syncCat(); syncLegend();
 requestAnimationFrame(()=>{const M=mapper(); drawField(geom(M.ratio),M,null);});
 })();
 </script>
