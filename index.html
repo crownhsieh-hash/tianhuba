@@ -83,6 +83,9 @@ button:disabled{opacity:.45;cursor:default}
 .slot small{display:block;font-size:9px;font-weight:400;color:#8a8270;font-family:var(--f-ui);text-align:center;line-height:1}
 @keyframes pop{from{transform:scale(.6)}to{transform:none}}
 .field{position:relative}
+.field.no-pachi .bins,.field.no-pachi #pachi{display:none}
+.pk-card{text-align:center}
+.pk-card ul{margin:0 0 18px;padding-left:1.2em;font-size:14px;line-height:1.75;color:var(--text);text-align:left}
 #pachi{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:6}
 .bins{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;margin-top:4px;background:var(--rail);padding:6px 8px;border-radius:0 0 10px 10px}
 .bin{height:30px;border-radius:4px;display:grid;place-items:center;font-weight:700;font-size:15px;color:var(--muted);box-shadow:inset 0 0 0 1px var(--line);font-variant-numeric:tabular-nums;transition:background .2s}
@@ -280,6 +283,15 @@ header.hd p{margin:0}
     <button class="intro-go" id="introGo">拉下天胡霸</button>
   </div>
 </div>
+<div class="intro" id="featDlg" role="dialog" aria-modal="true" aria-labelledby="featT" hidden>
+  <div class="intro-card pk-card">
+    <button class="intro-x" id="featX" aria-label="關閉">×</button>
+    <h2 id="featT"></h2>
+    <p class="intro-sub" id="featSub"></p>
+    <ul id="featList"></ul>
+    <button class="intro-go" id="featGo"></button>
+  </div>
+</div>
 <div class="wrap">
 
   <section class="panel">
@@ -339,7 +351,8 @@ header.hd p{margin:0}
         <input type="radio" name="diff" id="d5" value="5" class="lv5" hidden><label for="d5" class="lv5" hidden>焦</label>
       </div>
       <button id="newGame" hidden>重新開局</button>
-      <label class="chk"><input type="checkbox" id="fast"> 加速</label>
+      <label class="chk" id="fastChk" hidden><input type="checkbox" id="fast"> 加速</label>
+      <label class="chk" id="pachiChk" hidden><input type="checkbox" id="pachiOn"> 彈珠台</label>
     </div>
   </section>
 
@@ -369,17 +382,18 @@ header.hd p{margin:0}
           <div><b>天使</b><span><span class="dk-slot" data-d="1"></span> · 固定當莊 · 每張花牌 1 台 · 底 50／台 20</span><em>奶油桂花手</em></div>
           <div><b>派對</b><span><span class="dk-slot" data-d="2"></span> · 固定當莊 · 每張花牌 1 台 · 底 50／台 20</span><em>試試手氣，紙呢？沒帶～</em></div>
           <div><b>推眼鏡</b><span><span class="dk-slot" data-d="3"></span> · 盤面小 · 槓牌區 · 抓位輪莊 · 只算正花 · 底 300／台 100</span><em>啤酒很冰很好喝唷，努力了一個月，犒賞辛苦的自己。一罐，就一罐，真的</em></div>
-          <div><b>地獄</b><span><span class="dk-slot" data-d="4"></span> · 盤面小 · 槓牌區 · 抓位輪莊 · 只算正花 · 底 1000／台 500 · 可連跑 100 場</span><em>明天 8:30 要騎車過橋去上班，11:43 賴問我說調個簡單的版本，你對簡單的定義是，不會自己弄喔 不是說 AI 啥小很猛，還不就因為想去巴結小主管…..</em></div>
+          <div><b>地獄</b><span><span class="dk-slot" data-d="4"></span> · 盤面小 · 槓牌區 · 抓位輪莊 · 只算正花 · 底 1000／台 500 · 連跑 100 場（推眼鏡胡牌 3 次開放）</span><em>明天 8:30 要騎車過橋去上班，11:43 賴問我說調個簡單的版本，你對簡單的定義是，不會自己弄喔 不是說 AI 啥小很猛，還不就因為想去巴結小主管…..</em></div>
           <div class="lv5" hidden><b>焦</b><span><span class="dk-slot" data-d="5"></span> · 起手照台灣麻將：莊家 17 格、閒家 16 格（4-2 為莊家格） · 槓牌區 · 開完 5-5 才判斷聽牌 · 抓位輪莊 · 只算正花 · 底 10000／台 5000 · 可連跑 2,000 場</span><em>天崩開局，胡牌請截圖</em></div>
         </div>
         </details>
         <details class="sub">
           <summary>計分</summary>
         <p>得分 ＝（底 ＋ 台數 × 每台）× 3，自摸三家付。每次胡牌都算門清自摸 3 台；停輪時就成胡型算開門即胡：莊家天胡 24 台、閒家地胡 16 台（焦：閒家在 5-5 第一摸就自摸算地胡）；停輪時只是聽牌、之後才胡，莊家算天聽 8 台、閒家算地聽 4 台，這時不計門清、只計自摸 1 台（推眼鏡只算聽牌區第一次摸牌就胡）。集齊春夏秋冬或梅蘭竹菊算花槓 2 台；摸到牌庫最後一張或彈珠最後一次重開胡牌算海底撈月 1 台。牌都是自己摸的，所以刻子都算暗刻（三暗刻 2 台、四暗刻 5 台、五暗刻 8 台，可與碰碰胡同時計算）；當莊加莊家台，連莊再加連 N 拉 N。抓位輪莊的模式只算正花（依你的門風），固定當莊的模式每張花牌都算 1 台。盤面有多種胡牌拆法時，自動選台數最高的那一種，用不到的牌會關閘。</p>
+        <p>越玩越多：天使關累積天胡 10 次開放加速；派對關累積天胡 10 次開放彈珠台；推眼鏡關累積胡牌 3 次開放地獄連打；地獄關累積胡牌 30 台開放焦。加速、彈珠台開放後可以用各自的開關打開或關掉。</p>
         </details>
         <details class="sub">
           <summary>彈珠台</summary>
-    <p class="note" id="binNote">拉下手柄時會彈出 1 顆彈珠。彈珠落進亮燈的格子，聽牌時 5-5 就能依本局燈號多摸幾次牌（燈號越大越少見，最多 8 次）。</p>
+    <p class="note" id="binNote">彈珠台開放並打開後，拉下手柄時會彈出 1 顆彈珠。彈珠落進亮燈的格子，聽牌時 5-5 就能依本局燈號多摸幾次牌（燈號越大越少見，最多 8 次）。</p>
         </details>
       </div>
     </details>
@@ -1006,17 +1020,54 @@ window.addEventListener('resize',()=>{ if(!busy){const M=mapper(); drawField(geo
 const stats={n:0,t:0,w:0,s:0};
 let busy=false;
 /* 一局分成兩段：computeHand 先算完結果並推進局數、戰績（連跑也走這裡）；playHand 只負責播放動畫與顯示結果 */
-const UNLOCK={level:4,need:50,key:'thb_hell_tai',flag:'thb_lv5'};
+const UNLOCK={level:4,need:30,key:'thb_hell_tai',flag:'thb_lv5'};
 const lsGet=k=>{try{return localStorage.getItem(k);}catch(e){return null;}}, lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
 const lv5Open=()=>lsGet(UNLOCK.flag)==='1';
+// 越玩越多：加速、彈珠台、地獄連打預設都沒有，打到條件才開放（進度存在瀏覽器）
+const FEATS={
+  fast:{level:1,cond:'tianhu',need:10,key:'thb_f_fast_n',flag:'thb_f_fast',on:'thb_f_fast_on',box:'#fast',chk:'#fastChk',
+    title:'加速開放了！',sub:'天使關累積天胡 10 次',go:'開啟加速',
+    items:['拉霸停輪、開牌和彈珠的動畫都會變快，可以多打幾把。','之後可以用「加速」開關，隨時打開或關掉。']},
+  pachi:{level:2,cond:'tianhu',need:10,key:'thb_f_pachi_n',flag:'thb_f_pachi',on:'thb_f_pachi_on',box:'#pachiOn',chk:'#pachiChk',
+    title:'彈珠台開放了！',sub:'派對關累積天胡 10 次',go:'開啟彈珠台',
+    items:['每個難度的盤面下方都會出現 1～8 號格，彈珠打入有亮燈的格子，就能在聽牌時多摸幾張牌。','之後可以用「彈珠台」開關，隨時打開或關掉。']},
+  batch:{level:3,cond:'win',need:3,key:'thb_f_batch_n',flag:'thb_f_batch',
+    title:'地獄連打開放了！',sub:'推眼鏡關累積胡牌 3 次',go:'開啟地獄連打',
+    items:['在地獄關，手柄下方會出現「連跑 100 場」按鈕，一次算完 100 場，只回放有胡牌的場次。','局數和戰績都照實累計，可以更快累積台數、解鎖焦。']}
+};
+const featOpen=F=>lsGet(F.flag)==='1';
+const pachiOn=()=>featOpen(FEATS.pachi)&&$('#pachiOn').checked;
+const featQueue=[];
+function syncFeats(){
+  for(const F of Object.values(FEATS)){ if(!F.box) continue; const open=featOpen(F); $(F.chk).hidden=!open; if(!open) $(F.box).checked=false; }
+  fieldEl.classList.toggle('no-pachi',!pachiOn()); syncBatch();
+  if(pachiOn()&&!busy){ const M=mapper(); drawField(geom(M.ratio),M,null); }
+}
+for(const F of Object.values(FEATS)){ if(!F.box) continue; $(F.box).checked=featOpen(F)&&lsGet(F.on)==='1'; $(F.box).addEventListener('change',()=>{ lsSet(F.on,$(F.box).checked?'1':'0'); syncFeats(); }); }
+function countFeats(d,R){
+  if(!R.win) return; const tianhu=(R.taiList||[]).some(([n])=>String(n).startsWith('天胡'));
+  for(const F of Object.values(FEATS)){ if(F.level!==d||featOpen(F)) continue; if(F.cond==='tianhu'&&!tianhu) continue;
+    const c=(+lsGet(F.key)||0)+1; lsSet(F.key,String(c)); if(c>=F.need){ lsSet(F.flag,'1'); featQueue.push(F); } }
+}
+async function announceFeats(){
+  while(featQueue.length){
+    const F=featQueue.shift(); syncFeats(); log(`<b>${F.title.replace('！','')}</b> ${F.sub}`);
+    $('#featT').textContent=F.title; $('#featSub').textContent=F.sub; $('#featGo').textContent=F.go;
+    $('#featList').innerHTML=F.items.map(t=>`<li>${t}</li>`).join('');
+    const dlg=$('#featDlg'); dlg.hidden=false;
+    await new Promise(res=>{ const done=on=>{ dlg.hidden=true; if(on&&F.box){ $(F.box).checked=true; lsSet(F.on,'1'); } syncFeats(); $('#featGo').onclick=$('#featX').onclick=null; res(); };
+      $('#featGo').onclick=()=>done(true); $('#featX').onclick=()=>done(false); });
+  }
+}
 function computeHand(d){
-  const L=pickLights(), G=geom(mapper().ratio), balls=[dropBall(G,Math.random)], B=calcBonus(L,balls[0].slot+1);
+  const pk=pachiOn(), G=geom(mapper().ratio), L=pk?pickLights():{mode:'0',lit:[],label:'未開放'}, balls=pk?[dropBall(G,Math.random)]:[], B=pk?calcBonus(L,balls[0].slot+1):{n:0,text:'彈珠台未開放'};
   const lbl=roundLabel(GSt), R=playRound(d,catOpt(),B.n,gameCtx(GSt)), gmsg=stepGame(GSt,R,true);
   stats.n++; if(R.ting4!=='none') stats.t++; if(R.win){stats.w++;stats.s+=R.score;}
   let unlocked=false;
   // 解鎖第 5 級：地獄局累積胡牌台數達門檻（存在瀏覽器）
   if(d===UNLOCK.level&&R.win&&!lv5Open()){ const t=(+lsGet(UNLOCK.key)||0)+R.tai; lsSet(UNLOCK.key,String(t)); if(t>=UNLOCK.need){ lsSet(UNLOCK.flag,'1'); unlocked=true; } }
-  return {d,L,G,balls,B,R,lbl,gmsg,unlocked};
+  countFeats(d,R);
+  return {d,L,G,balls,B,R,lbl,gmsg,unlocked,pk};
 }
 function refreshStats(){
   renderStatus();
@@ -1027,9 +1078,9 @@ async function playHand(h){
   const d=h.d;
   layout(d); resetTray(); $('#tai').hidden=true; renderWaits(null,'roll');
   const markDealerCell=R=>Object.values(R.board).filter(x=>x.dcell).forEach(x=>{ const el=els[x.r+'-'+x.c]; el.className='cell kslot dslot'; gate(el,'wait','莊'); });
-  const {L,G,balls,B,R}=h; markDealerCell(R); setBins(L); binEls.forEach(x=>x.classList.remove('hit','miss')); const M=mapper();
-  log(`<b>彈珠台</b> 本局燈號 ${L.label}，亮燈格 ${L.lit.join('、')}，彈出 1 顆彈珠`);
-  const ballP=animateBalls(G,M,balls.map(x=>x.path)).then(()=>{ balls.forEach(x=>binEls[x.slot].classList.add(L.lit.includes(x.slot+1)?'hit':'miss')); log(`<b>彈珠落在 ${balls[0].slot+1} 號格</b> · ${B.text}`); });
+  const {L,G,balls,B,R,pk}=h; markDealerCell(R); fieldEl.classList.toggle('no-pachi',!pk); const M=mapper();
+  if(pk){ setBins(L); binEls.forEach(x=>x.classList.remove('hit','miss')); log(`<b>彈珠台</b> 本局燈號 ${L.label}，亮燈格 ${L.lit.join('、')}，彈出 1 顆彈珠`); }
+  const ballP=!pk?Promise.resolve():animateBalls(G,M,balls.map(x=>x.path)).then(()=>{ balls.forEach(x=>binEls[x.slot].classList.add(L.lit.includes(x.slot+1)?'hit':'miss')); log(`<b>彈珠落在 ${balls[0].slot+1} 號格</b> · ${B.text}`); });
   $('#result').innerHTML='<span class="big">滾動中…</span>';
   $('#pool').textContent=`全盤共用牌庫：${R.cats.map(c=>CAT[c]).join('、')}＋花牌，共 ${R.poolTotal} 張；本局開出 ${R.poolTotal-R.poolLeft} 張，剩 ${R.poolLeft} 張`;
   disp=shuffle(R.cats.flatMap(s=>Array.from({length:s==='z'?7:9},(_,i)=>({s,n:i+1}))));
@@ -1122,6 +1173,7 @@ async function finishHand(h){
     $('#result').innerHTML=`<span class="big">流局</span><span style="color:var(--muted)">${lbl}${R.dealer?' · 莊家':' · 閒家'}</span><span style="color:var(--muted)">${R.ting4==='none'?'前四橫條沒有形成聽牌結構。':R.ting==='none'?'5-1～5-4 開牌後不再聽牌。':'聽牌區沒有開出聽牌張。'}</span>`;
   }
   if(h.unlocked) await announceUnlock();
+  await announceFeats();
 }
 async function announceUnlock(){
   syncLv5(); log(`<b>解鎖新難度：焦</b> 地獄局累積胡牌 ${UNLOCK.need} 台`); await show('解鎖新難度：焦',false,1800);
@@ -1156,6 +1208,7 @@ async function runBatch(){
     $('#result').innerHTML=`<span class="big">${N.toLocaleString()} 場無胡牌</span><span style="color:var(--muted)">局數與戰績已累計，可以開新局。</span>`;
     $('#waitBox').innerHTML='<span class="wait-empty">拉下手柄開始</span>';
     if(unlocked) await announceUnlock();
+    await announceFeats();
     lockUI(false); return;
   }
   box.innerHTML=`<b class="bh">連跑 ${N.toLocaleString()} 場：胡 ${wins.length} 場</b><ol>${wins.map(h=>`<li>第 ${h.no} 場 · ${h.lbl} · ${title(h)}</li>`).join('')}</ol>`;
@@ -1176,6 +1229,7 @@ async function runBatch(){
   lis.forEach(li=>{ li.classList.remove('now'); li.classList.add('done'); });
   $('#skipBtn').hidden=true; $('#pull').textContent='拉 下 手 柄';
   if(unlocked) await announceUnlock();
+  await announceFeats();
   rpSkip=false; lockUI(false);
 }
 // 胡牌牌型：萬→筒→條→字、由小到大，對眼放最後；組與組之間不留空隙，換行時整組一起移動；胡牌張金框標示
@@ -1296,7 +1350,7 @@ let prevDiff=null;
 function applyLevel(silent){
   const d=diffNow(), L=RULES.levels[d]; prevDiff=d;
   RULES.dealer.mode=L.dealer; GSt=newGame(); renderStatus(); layout(d); syncCat();
-  $('#waitBox').innerHTML='<span class="wait-empty">拉下手柄開始</span>'; $('#batchBox').hidden=true; syncBatch(); renderIntroLv();
+  $('#waitBox').innerHTML='<span class="wait-empty">拉下手柄開始</span>'; $('#batchBox').hidden=true; syncBatch(); renderIntroLv(); syncFeats();
   if(!silent) log(`<b>${L.name}</b> 開新牌局 · ${L.dealer==='real'?'真實模式，抓位為'+WIND[GSt.seat]+'位':'指定玩家為莊家'}`);
 }
 document.querySelectorAll('input[name=diff]').forEach(x=>x.addEventListener('change',()=>{
@@ -1314,7 +1368,7 @@ const DK={z:['發','','t-z6','大字'],m:['九','萬','t-m','萬'],p:['九','筒
 const deckHTML=(d,lead)=>{ const one=c=>{const [a,b,k,n]=DK[c];return `<span class="dk" title="${n}"><span class="mt ${k}" role="img" aria-label="${n}"><b>${a}</b>${b?`<i>${b}</i>`:''}</span></span>`;}; return `<span class="dkl">${lead?`<span>${lead}</span>`:''}${DECKS[d].map(one).join('')}<span class="op">＋</span>${one('f')}</span>`; };
 const LVINFO={1:{deck:'大字＋花牌',spec:'牌庫只用：大字＋花牌',sub:'奶油桂花手'},2:{deck:'大字、萬＋花牌',spec:'牌庫只用：大字、萬＋花牌',sub:'試試手氣，紙呢？沒帶～'},3:{deck:'大字、萬、筒＋花牌',spec:'牌庫只用：大字、萬、筒＋花牌',sub:'啤酒很冰很好喝唷，努力了一個月，犒賞辛苦的自己。一罐，就一罐，真的'},4:{deck:'大字、萬、筒＋花牌',spec:'牌庫只用：大字、萬、筒＋花牌 · 盤面小',sub:'明天 8:30 要騎車過橋去上班，11:43 賴問我說調個簡單的版本，你對簡單的定義是，不會自己弄喔 不是說 AI 啥小很猛，還不就因為想去巴結小主管…..'},5:{deck:'大字、萬、筒、條＋花牌',spec:'牌庫只用：大字、萬、筒、條＋花牌 · 盤面小',sub:'天崩開局，胡牌請截圖'}};
 function syncLv5(){ const on=lv5Open(); document.querySelectorAll('.lv5').forEach(e=>e.hidden=!on); renderIntroLv(); }
-function syncBatch(){ const d=diffNow(), b=$('#batchBtn'); b.hidden=!(d===4||d===5); b.textContent=d===5?'連跑 2,000 場':'連跑 100 場'; }
+function syncBatch(){ const d=diffNow(), b=$('#batchBtn'); b.hidden=!(d===5||(d===4&&featOpen(FEATS.batch))); b.textContent=d===5?'連跑 2,000 場':'連跑 100 場'; }
 function fillDeckSlots(){ document.querySelectorAll('.dk-slot').forEach(el=>{ el.innerHTML=deckHTML(+el.dataset.d,'牌庫：'); }); }
 function renderIntroLv(){
   const box=$('#introLv'); if(!box) return; const cur=diffNow();
