@@ -270,6 +270,12 @@ header.hd{align-items:baseline;justify-content:flex-start;gap:14px;flex-wrap:wra
 header.hd p{margin:0}
 #newGame[hidden]{display:none}
 .cell.dslot .gate.wait{color:var(--win)}
+/* 遊戲打擊感 */
+.jx-flash{position:absolute;inset:0;background:#fff;z-index:8;pointer-events:none;border-radius:inherit}
+#jxLayer{position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden}
+.jx-bit{position:absolute;left:0;top:0;width:7px;height:9px;margin:-4px 0 0 -3px;border-radius:2px;background:var(--ivory);box-shadow:0 0 0 1px rgba(0,0,0,.25);will-change:transform,opacity}
+.jx-bit.gold{background:var(--win)}
+.bin{position:relative}
 </style>
 
 <div class="intro" id="intro" role="dialog" aria-modal="true" aria-labelledby="introT">
@@ -353,6 +359,7 @@ header.hd p{margin:0}
       <button id="newGame" hidden>重新開局</button>
       <label class="chk" id="fastChk" hidden><input type="checkbox" id="fast"> 加速</label>
       <label class="chk" id="pachiChk" hidden><input type="checkbox" id="pachiOn"> 彈珠台</label>
+      <label class="chk"><input type="checkbox" id="sndOn" checked> 音效</label>
     </div>
   </section>
 
@@ -881,6 +888,85 @@ const diffNow=()=>+document.querySelector('input[name=diff]:checked').value;
 const lvName=d=>(RULES.levels&&RULES.levels[d]?RULES.levels[d].name:'難度'+d);
 const sp=()=>rpSkip?.04:($('#fast').checked?.25:1);
 const sleep=ms=>new Promise(res=>setTimeout(res,ms*sp()));
+/* ================= 遊戲打擊感（game juice）=================
+   所有數值集中在 JUICE；每一招都有 enabled 開關，改成 false 即可關閉做對照。
+   系統開啟「減少動態效果」時，震屏、閃白、碎片、擠壓、慢鏡自動關閉。 */
+const JUICE={
+  hitstop:{enabled:true, ms:70},                         // 1 頓幀：胡牌那一刻整盤停住（真實時間）
+  shake:{enabled:true, light:2, heavy:8, ms:200},        // 2 震屏：px，0.2 秒內衰減；多次取最大不疊加
+  flash:{enabled:true, ms:60},                           // 3 閃白：整格變白約 1～2 幀
+  debris:{enabled:true, min:6, max:10, ms:600, cap:40},  // 4 碎片：每次 6～10 片，同時最多 40 片
+  squash:{enabled:true, land:0.7, ms:180, ball:1.2},     // 5 擠壓拉伸：停輪壓到 70%、彈珠沿速度拉到 120%
+  trail:{enabled:true, len:12},                          // 6 拖尾：彈珠最近 12 個位置
+  combo:{enabled:true, max:12, resetMs:1000, base:392, vol:0.12}, // 7 連擊升調：每次升 1 個半音、最多 12 級、停 1 秒回原音
+  slowmo:{enabled:true, scale:0.3, zoom:1.1, ms:600}     // 8 終結慢鏡：聽牌後最後一次摸牌
+};
+const juice=(()=>{
+  const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const on=k=>JUICE[k].enabled&&!(RM&&['shake','flash','debris','squash','slowmo'].includes(k));
+  const fx=()=>!rpSkip; // 略過回放時不播效果
+  const real=ms=>new Promise(r=>setTimeout(r,ms));     // 不受加速影響的真實時間
+  const st={frozen:false, slow:false, amp:0, t0:0, raf:0, n:0, last:0, ac:null};
+  // 1 頓幀
+  async function hitstop(){ if(!on('hitstop')||!fx()) return; st.frozen=true; await real(JUICE.hitstop.ms); st.frozen=false; }
+  // 2 震屏
+  const shakeEl=()=>$('#board').closest('section')||$('#board');
+  function shake(heavy){
+    if(!on('shake')||!fx()) return; const a=heavy?JUICE.shake.heavy:JUICE.shake.light;
+    if(st.raf&&st.amp*(1-(performance.now()-st.t0)/JUICE.shake.ms)>=a) return; // 取最大值，不疊加
+    st.amp=a; st.t0=performance.now(); const el=shakeEl(); cancelAnimationFrame(st.raf);
+    const f=()=>{ const k=1-(performance.now()-st.t0)/JUICE.shake.ms; if(k<=0){ el.style.transform=''; st.raf=0; return; }
+      const m=st.amp*k*k; el.style.transform=`translate(${(Math.random()*2-1)*m}px,${(Math.random()*2-1)*m}px)`; st.raf=requestAnimationFrame(f); };
+    f();
+  }
+  // 3 閃白
+  function flash(el){ if(!on('flash')||!fx()||!el) return; const w=document.createElement('span'); w.className='jx-flash'; el.appendChild(w); setTimeout(()=>w.remove(),JUICE.flash.ms); }
+  // 4 碎片（物件池回收）
+  const layer=document.createElement('div'); layer.id='jxLayer'; document.body.appendChild(layer);
+  const pool=[], live=new Set();
+  function debris(el,gold){
+    if(!on('debris')||!fx()||!el) return; const r=el.getBoundingClientRect(), D=JUICE.debris;
+    const n=D.min+Math.floor(Math.random()*(D.max-D.min+1));
+    for(let i=0;i<n&&live.size<D.cap;i++){
+      const p=pool.pop()||document.createElement('i'); p.className='jx-bit'+(gold&&i%2?' gold':''); layer.appendChild(p); live.add(p);
+      const x0=r.left+r.width/2, y0=r.top+r.height/2, vx=(Math.random()*2-1)*160, vy=-120-Math.random()*200, rot=Math.random()*720-360, t0=performance.now();
+      const f=()=>{ const t=(performance.now()-t0)/1000; if(t*1000>=D.ms){ p.remove(); live.delete(p); pool.push(p); return; }
+        p.style.transform=`translate(${x0+vx*t}px,${y0+vy*t+600*t*t}px) rotate(${rot*t}deg)`; p.style.opacity=String(1-t*1000/D.ms); requestAnimationFrame(f); };
+      f();
+    }
+  }
+  // 5 擠壓拉伸：停輪時牌面往下壓再彈回（另一軸補償，維持面積）
+  function squash(el){ if(!on('squash')||!fx()||!el||!el.animate) return; const y=JUICE.squash.land, x=1/y; el.style.transformOrigin='50% 100%';
+    el.animate([{transform:'none'},{transform:`scale(${x},${y})`,offset:.35},{transform:'none'}],{duration:JUICE.squash.ms,easing:'ease-out'}); }
+  // 7 連擊升調（程式合成音，不需要音檔）
+  const sndOn=()=>{ try{ return localStorage.getItem('thb_snd')!=='0'; }catch(e){ return true; } };
+  function tone(freq,dur,type,vol){
+    if(!sndOn()) return; try{ st.ac=st.ac||new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return; }
+    const a=st.ac, o=a.createOscillator(), g=a.createGain(), t=a.currentTime; o.type=type||'triangle'; o.frequency.value=freq;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.005); g.gain.exponentialRampToValueAtTime(.0001,t+dur); o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+dur+.02);
+  }
+  function tick(){ if(!on('combo')||!fx()) return; const C=JUICE.combo, now=performance.now(); if(now-st.last>C.resetMs) st.n=0; st.last=now;
+    tone(C.base*Math.pow(2,st.n/12),.12,'triangle',C.vol); st.n=Math.min(st.n+1,C.max); }
+  function winSound(big){ if(!on('combo')||!fx()) return; const C=JUICE.combo, b=C.base*Math.pow(2,st.n/12);
+    [0,4,7,12].concat(big?[16,19]:[]).forEach((s,i)=>setTimeout(()=>tone(b*Math.pow(2,s/12),.25,'triangle',C.vol*1.2),i*70)); st.n=0; }
+  function missSound(){ if(!on('combo')||!fx()) return; tone(JUICE.combo.base/2,.18,'sine',JUICE.combo.vol); st.n=0; }
+  // 8 終結慢鏡：盤面放大、跑馬變慢 0.6 秒（真實時間）
+  async function slowmo(el){
+    if(!on('slowmo')||!fx()||$('#fast').checked) return; const S=JUICE.slowmo, b=$('#board'), br=b.getBoundingClientRect(), r=el.getBoundingClientRect();
+    b.style.transformOrigin=`${r.left-br.left+r.width/2}px ${r.top-br.top+r.height/2}px`; b.style.transition='transform .2s ease-out'; b.style.transform=`scale(${S.zoom})`;
+    st.slow=true; await real(S.ms); // 跑馬放慢到 0.3 倍、持續 0.6 秒（真實時間），讓最後一張有懸念
+  }
+  function slowEnd(){ if(!st.slow) return; st.slow=false; const b=$('#board'); b.style.transform=''; setTimeout(()=>{ b.style.transition=''; },250); }
+  // 胡牌時刻：頓幀 → 閃白 → 震屏 → 碎片 → 胡牌音
+  async function win(el,R){ const big=R&&(R.tai>=RULES.highTai||['tianhu','dihu','baxian'].includes(R.ting)||R.diHuFirst);
+    await hitstop(); flash(el); shake(big); debris(el,true); winSound(big); }
+  // 小事件：4 級閘門、開槓、彈珠進亮燈格
+  function bump(el,gold){ flash(el); shake(false); if(gold) debris(el,true); }
+  return {JUICE, st, hitstop, shake, flash, debris, squash, tick, winSound, missSound, slowmo, slowEnd, win, bump, sndOn,
+    ballFx:()=>fx(), on};
+})();
+window.JUICE=JUICE; window.juice=juice; // 可在瀏覽器主控台直接調整，例如 JUICE.shake.enabled=false
+
 const setFace=(el,t)=>{const [a,b]=face(t),f=el.firstChild;f.className='face '+cls(t);f.firstChild.textContent=a;f.lastChild.textContent=b;el.classList.remove('idle');};
 const gate=(el,lv,text)=>{const g=el.children[1];g.className='gate '+(lv==='wait'?'wait':'l'+lv);g.textContent=(text||LV[lv]).replace(/\d級\n?/,'');el.classList.add('closed');};
 const openGate=el=>el.classList.remove('closed');
@@ -916,9 +1002,9 @@ function layout(d){
     if(a&&isHu(r,c)) gate(el,'wait','聽牌區'); else if(a&&r===5&&preRows(d)===4) gate(el,'wait','待開');
   }
 }
-let spinSet=new Set(), disp=[], ticker=null, k=0;
+let spinSet=new Set(), disp=[], ticker=null, k=0, slowK=0;
 // 每次只前進一格、各格錯開起點：牌種只有 7 種（純字牌）時也會持續轉動
-function startTicker(){ if(ticker) return; ticker=setInterval(()=>{ k=(k+1)%disp.length; let j=0; for(const el of spinSet){ setFace(el,disp[(k+j*3)%disp.length]); j++; } },70); }
+function startTicker(){ if(ticker) return; ticker=setInterval(()=>{ if(juice.st.frozen) return; if(juice.st.slow&&(++slowK)%3) return; k=(k+1)%disp.length; let j=0; for(const el of spinSet){ setFace(el,disp[(k+j*3)%disp.length]); j++; } },70); }
 function stopTicker(){clearInterval(ticker);ticker=null;spinSet.clear();}
 function spin(el){el.classList.remove('idle');el.classList.add('spinning');spinSet.add(el);}
 function halt(el){spinSet.delete(el);el.classList.remove('spinning');}
@@ -935,13 +1021,13 @@ async function land(cell,lastCell){
   }
   if(cell.baxian){ setFace(el,cell.seq.at(-1)); gate(el,4,'八仙\n過海'); return; }
   if(cell.flower){ setFace(el,cell.flower); gate(el,GT.flower); toTray(cell.flower,cell); log(`<b>${cell.r}-${cell.c}</b> 開出 ${name(cell.flower)}，花牌佔格不成組 · ${GT.flower} 級閘門`); return; }
-  setFace(el,cell.tile);
+  setFace(el,cell.tile); juice.squash(el);
 }
 const gname={pair:'對子',chow:'順子',pung:'刻子',kong:'槓'};
 const gsum=gs=>{const c={};gs.forEach(g=>c[g.type]=(c[g.type]||0)+1);return Object.entries(c).map(([t,n])=>gname[t]+' '+n).join('、')||'無';};
 async function landKong(kc){
   if(kc.hidden){ log(`<b>開槓</b> ${name(kc.kongOf)} 成槓，補進 ${kc.tile?name(kc.tile):'花牌'}（槓牌區已滿，不顯示，胡牌時列入牌型）`); return; }
-  const el=E(kc), had=!!ticker; openGate(el); spin(el); if(!had) startTicker(); await sleep(500); await land(kc,false); if(!had) stopTicker();
+  const el=E(kc), had=!!ticker; openGate(el); spin(el); if(!had) startTicker(); await sleep(500); await land(kc,false); if(!had) stopTicker(); juice.bump(el,false);
   log(`<b>開槓 ${kc.r}-${kc.c}</b> ${name(kc.kongOf)} 成槓，槓牌區補進 ${kc.tile?name(kc.tile):'第 8 張花牌'}`);
 }
 async function revealStep(st,label){
@@ -1000,19 +1086,29 @@ function mapper(){
   return {fw:f.width,fh:f.height,ratio:w>0?bh/w:1.38,sc:w/500,X:x=>left+x/500*w,
     Y:(y,G)=>y<=G.Hb?bt+y/G.Hb*bh:y<=G.slotTop?bt+bh+(y-G.Hb)/(G.slotTop-G.Hb)*(sb-bt-bh):sb+(y-G.slotTop)/(G.H-G.slotTop)*sh};
 }
-function drawField(G,M,balls){
+function drawField(G,M,balls,trails){
   const dpr=window.devicePixelRatio||1;
   if(cv.width!==Math.round(M.fw*dpr)||cv.height!==Math.round(M.fh*dpr)){cv.width=Math.round(M.fw*dpr);cv.height=Math.round(M.fh*dpr);}
   ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,M.fw,M.fh);
   ctx.fillStyle='#b98b2e';
   for(const p of G.pins){ctx.beginPath();ctx.arc(M.X(p.x),M.Y(p.y,G),Math.max(2,G.pr*M.sc),0,7);ctx.fill();}
-  for(const ball of balls||[]){ctx.fillStyle='#dfe4e8';ctx.strokeStyle='#7d8790';ctx.lineWidth=1;ctx.beginPath();ctx.arc(M.X(ball[0]),M.Y(ball[1],G),Math.max(4,G.r*M.sc),0,7);ctx.fill();ctx.stroke();}
+  const rad=Math.max(4,G.r*M.sc);
+  for(const [bi,ball] of (balls||[]).entries()){
+    const tr=(trails&&trails[bi])||[];
+    // 6 拖尾：越舊越細越透明
+    if(juice.on('trail')&&tr.length){ tr.forEach((q,k)=>{ const a=1-(k+1)/(tr.length+1); ctx.fillStyle=`rgba(223,228,232,${.45*a})`; ctx.beginPath(); ctx.arc(M.X(q[0]),M.Y(q[1],G),rad*(.35+.6*a),0,7); ctx.fill(); }); }
+    // 5 彈珠沿速度方向拉長（另一軸補償）
+    const x=M.X(ball[0]), y=M.Y(ball[1],G), pv=tr[0], vx=pv?x-M.X(pv[0]):0, vy=pv?y-M.Y(pv[1],G):0, v=Math.hypot(vx,vy);
+    const s=juice.on('squash')&&v>2?Math.min(JUICE.squash.ball,1+v/40):1;
+    ctx.save(); ctx.translate(x,y); ctx.rotate(Math.atan2(vy,vx)); ctx.scale(s,1/s);
+    ctx.fillStyle='#dfe4e8';ctx.strokeStyle='#7d8790';ctx.lineWidth=1;ctx.beginPath();ctx.arc(0,0,rad,0,7);ctx.fill();ctx.stroke(); ctx.restore();
+  }
 }
 function animateBalls(G,M,paths){
   return new Promise(res=>{
     const step=$('#fast').checked?4:1, len=Math.max(...paths.map(p=>p.length)), lag=12; let i=0;
     const at=(p,k)=>p[Math.max(0,Math.min(k,p.length-1))];
-    const tick=()=>{ drawField(G,M,paths.map((p,j)=>at(p,i-j*lag))); i+=step; if(i<len+lag) requestAnimationFrame(tick); else { drawField(G,M,paths.map(p=>p.at(-1))); res(); } };
+    const tick=()=>{ drawField(G,M,paths.map((p,j)=>at(p,i-j*lag)),paths.map((p,j)=>{ const t=[]; if(i-j*lag<=0||i-j*lag>=p.length) return t; for(let k=1;k<=JUICE.trail.len;k++){ const kk=i-j*lag-k*step; if(kk<0) break; t.push(p[kk]); } return t; })); i+=step; if(i<len+lag) requestAnimationFrame(tick); else { drawField(G,M,paths.map(p=>p.at(-1))); res(); } };
     requestAnimationFrame(tick);
   });
 }
@@ -1080,7 +1176,7 @@ async function playHand(h){
   const markDealerCell=R=>Object.values(R.board).filter(x=>x.dcell).forEach(x=>{ const el=els[x.r+'-'+x.c]; el.className='cell kslot dslot'; gate(el,'wait','莊'); });
   const {L,G,balls,B,R,pk}=h; markDealerCell(R); fieldEl.classList.toggle('no-pachi',!pk); const M=mapper();
   if(pk){ setBins(L); binEls.forEach(x=>x.classList.remove('hit','miss')); log(`<b>彈珠台</b> 本局燈號 ${L.label}，亮燈格 ${L.lit.join('、')}，彈出 1 顆彈珠`); }
-  const ballP=!pk?Promise.resolve():animateBalls(G,M,balls.map(x=>x.path)).then(()=>{ balls.forEach(x=>binEls[x.slot].classList.add(L.lit.includes(x.slot+1)?'hit':'miss')); log(`<b>彈珠落在 ${balls[0].slot+1} 號格</b> · ${B.text}`); });
+  const ballP=!pk?Promise.resolve():animateBalls(G,M,balls.map(x=>x.path)).then(()=>{ balls.forEach(x=>{ const lit=L.lit.includes(x.slot+1); binEls[x.slot].classList.add(lit?'hit':'miss'); if(lit) juice.bump(binEls[x.slot],true); }); log(`<b>彈珠落在 ${balls[0].slot+1} 號格</b> · ${B.text}`); });
   $('#result').innerHTML='<span class="big">滾動中…</span>';
   $('#pool').textContent=`全盤共用牌庫：${R.cats.map(c=>CAT[c]).join('、')}＋花牌，共 ${R.poolTotal} 張；本局開出 ${R.poolTotal-R.poolLeft} 張，剩 ${R.poolLeft} 張`;
   disp=shuffle(R.cats.flatMap(s=>Array.from({length:s==='z'?7:9},(_,i)=>({s,n:i+1}))));
@@ -1093,8 +1189,8 @@ async function playHand(h){
   for(const st of R.steps){
     frameTo(rowKeys(R,st.r)); rowKeys(R,st.r).forEach(k=>{ const el=els[k]; if(el.classList.contains('idle')) spin(el); });
     await sleep(420);
-    await revealStep(st,`第 ${st.r} 橫條停止`);
-    if(st.raised){ const [hr,hc]=huRC(); gate(els[hr+'-'+hc],RULES.gates.high,RULES.gates.high+'級\n聽牌區'); await show(`可能 ${RULES.highTai} 台以上`,false,800); log(`<b>第 ${st.r} 橫條 · 可能 ${RULES.highTai} 台以上</b>，聽牌區閘門升為 ${RULES.gates.high} 級`); }
+    await revealStep(st,`第 ${st.r} 橫條停止`); juice.tick();
+    if(st.raised){ const [hr,hc]=huRC(); gate(els[hr+'-'+hc],RULES.gates.high,RULES.gates.high+'級\n聽牌區'); juice.bump(els[hr+'-'+hc],true); await show(`可能 ${RULES.highTai} 台以上`,false,800); log(`<b>第 ${st.r} 橫條 · 可能 ${RULES.highTai} 台以上</b>，聽牌區閘門升為 ${RULES.gates.high} 級`); }
   }
   stopTicker();
   if(R.ting4==='baxian') document.querySelectorAll('.cell.spinning').forEach(el=>{halt(el);el.classList.add('idle');el.firstChild.firstChild.textContent='';el.firstChild.lastChild.textContent='';});
@@ -1105,6 +1201,7 @@ async function playHand(h){
   if(!lateJ){
   renderWaits(R.wait4Info,R.ting4);
   log(`<b>聽牌判定（${R.lastLabel} 開牌後）</b> ${T[R.ting4]}${wl(R.waits4,R.wait4Info)}${R.ting4==='none'&&R.short4>0?' · 面子還差 '+R.short4+' 組':''}`);
+  if(['tianhu','dihu','complete','baxian'].includes(R.ting4)) await juice.win($('#board'),R); else if(R.ting4==='none') juice.missSound();
   await show(T[R.ting4],R.ting4==='none',R.ting4==='tianhu'||R.ting4==='dihu'||R.ting4==='baxian'?1600:900);
   // 框線：聽牌→框聽牌區（或先框 5-1～5-4）；八仙停在原排；未聽牌、停輪即胡→消失
   if(R.ting4==='ting') frameTo(R.step5?rowKeys(R,5):[huKey()]); else if(R.ting4!=='baxian') frameOff();
@@ -1127,26 +1224,28 @@ async function playHand(h){
   }
   if(R.hu){
     const el5=E(R.hu), hitT=t=>R.waits.some(w=>eq(w,t)); openGate(el5); spin(el5);
-    startTicker(); await sleep(1100);
-    await land(R.hu,true); stopTicker();
+    const lastDraw=!R.extra.length&&!R.kongDraws.length;
+    startTicker(); await sleep(1100); if(lastDraw) await juice.slowmo(el5);
+    await land(R.hu,true); stopTicker(); juice.slowEnd(); juice.tick();
+    if(R.hu.tile&&hitT(R.hu.tile)) await juice.win(el5,R);
     if(lateJ){ renderWaits(R.wait4Info,'ting'); log(`<b>聽牌判定（5-5 開牌後）</b> 聽牌${wl(R.waits4,R.wait4Info)}`); if(!hitT(R.hu.tile)) await show('聽牌',false,900); }
-    for(const kc of (R.hu.kongs||[])){ await show(`開槓！補牌`,false,600); await landKong(kc); if(hitT(kc.tile)) log('<b>槓上開花！</b>'); }
-    if(!R.hu.tile){ log('<b>八仙過海</b> 集滿 8 張花牌，當場胡牌'); await show('八仙過海！',false,1600); }
+    for(const kc of (R.hu.kongs||[])){ await show(`開槓！補牌`,false,600); await landKong(kc); if(hitT(kc.tile)){ log('<b>槓上開花！</b>'); await juice.win(kc.hidden?el5:E(kc),R); } }
+    if(!R.hu.tile){ log('<b>八仙過海</b> 集滿 8 張花牌，當場胡牌'); await juice.win(el5,R); await show('八仙過海！',false,1600); }
     else log(`<b>聽牌區 ${R.hu.r}-${R.hu.c}</b> 開出 ${name(R.hu.tile)}${R.hu.seq.length?'（第 '+(R.hu.seq.length+1)+' 次機會）':''}${hitT(R.hu.tile)?' · 胡牌':' · 未中'}`);
     for(const [i,x] of R.kongDraws.entries()){
       await sleep(300); gate(el5,R.high?RULES.gates.high:RULES.gates.huReopen,`槓補牌\n${i+1}/${R.kongs}`);
       await show(`開槓補牌 第 ${i+1} 張`,false,700);
       openGate(el5); spin(el5); startTicker(); await sleep(900);
-      await land(x,true); stopTicker();
+      await land(x,true); stopTicker(); juice.tick(); if(x.tile&&hitT(x.tile)) await juice.win(el5,R);
       log(`<b>開槓補牌 ${i+1}/${R.kongs}</b> 盤面有 ${R.kongs} 組槓，補進 ${x.tile?name(x.tile):'第 8 張花牌 · 八仙過海'}${hitT(x.tile)?' · 槓上開花！':' · 未中'}`);
     }
     const q=R.extra.length>6?.35:1; // 重開次數多時縮短每次演出
     for(const [i,x] of R.extra.entries()){
       await sleep(300*q); gate(el5,R.high?RULES.gates.high:RULES.gates.huReopen,`重開\n${i+1}/${R.bonus}`);
       await show(`彈珠加碼 第 ${i+1} 次`,false,700*q);
-      openGate(el5); spin(el5); startTicker(); await sleep(900*q);
-      await land(x,true); stopTicker();
-      for(const kc of (x.kongs||[])){ await show(`開槓！補牌`,false,600*q); await landKong(kc); if(hitT(kc.tile)) log('<b>槓上開花！</b>'); }
+      openGate(el5); spin(el5); startTicker(); await sleep(900*q); if(i===R.extra.length-1) await juice.slowmo(el5);
+      await land(x,true); stopTicker(); juice.slowEnd(); juice.tick(); if(x.tile&&hitT(x.tile)) await juice.win(el5,R);
+      for(const kc of (x.kongs||[])){ await show(`開槓！補牌`,false,600*q); await landKong(kc); if(hitT(kc.tile)){ log('<b>槓上開花！</b>'); await juice.win(kc.hidden?el5:E(kc),R); } }
       log(`<b>聽牌區重開 ${i+1}/${R.bonus}</b> 重排牌庫後撈出 ${x.tile?name(x.tile):'第 8 張花牌 · 八仙過海'}${hitT(x.tile)?' · 胡牌':' · 未中'}`);
     }
     if(R.reopenCells&&R.reopenCells.length){ await sleep(200); R.reopenCells.forEach(x=>{openGate(E(x));}); log(`<b>閘門重開</b> ${R.reopenCells.map(x=>x.r+'-'+x.c).join('、')} 與胡牌張組成胡牌型${R.winType?'（'+R.winType+'）':''}`); }
@@ -1156,7 +1255,7 @@ async function playHand(h){
       if(R.closeCells&&R.closeCells.length){ await sleep(200); R.closeCells.forEach(x=>{ x.gate=RULES.gates.nomatch; gate(E(x),RULES.gates.nomatch); }); log(`<b>關閉無效閘門</b> ${R.closeCells.map(x=>x.r+'-'+x.c).join('、')}`); }
     }
     if(R.win){ el5.classList.add('kept'); }
-    else { const G2=RULES.gates, lv=R.high?G2.high:(R.hu.seq.length||R.extra.some(x=>x.seq.length))?G2.lastFlower:(R.extra.length||R.kongDraws.length)?G2.huReopen:G2.huMiss; await sleep(200); gate(el5,lv,lv+'級\n未中'); log(`<b>聽牌區閘門關閉</b> · ${lv} 級`); }
+    else { juice.missSound(); const G2=RULES.gates, lv=R.high?G2.high:(R.hu.seq.length||R.extra.some(x=>x.seq.length))?G2.lastFlower:(R.extra.length||R.kongDraws.length)?G2.huReopen:G2.huMiss; await sleep(200); gate(el5,lv,lv+'級\n未中'); log(`<b>聽牌區閘門關閉</b> · ${lv} 級`); }
   }
 }
 async function finishHand(h){
@@ -1378,6 +1477,7 @@ function renderIntroLv(){
   $('#introNow').textContent=lvName(cur);
   $('#introDeck').innerHTML=cur===5?'':deckHTML(cur,'牌組：'); $('#introNowSub').textContent=cur===5?'':LVINFO[cur].sub;
 }
+(()=>{ const c=$('#sndOn'); c.checked=juice.sndOn(); c.addEventListener('change',()=>{ try{ localStorage.setItem('thb_snd',c.checked?'1':'0'); }catch(e){} }); })();
 const introEl=$('#intro'), closeIntro=()=>{ introEl.hidden=true; };
 $('#introLv').addEventListener('click',e=>{ const b=e.target.closest('button[data-d]'); if(!b||busy) return; const r=document.querySelector(`input[name=diff][value="${b.dataset.d}"]`); if(r.checked) return; r.checked=true; applyLevel(false); });
 $('#introX').addEventListener('click',closeIntro);
