@@ -896,7 +896,7 @@ const JUICE={
   shake:{enabled:true, light:2, heavy:8, ms:200},        // 2 震屏：px，0.2 秒內衰減；多次取最大不疊加
   flash:{enabled:true, ms:60},                           // 3 閃白：整格變白約 1～2 幀
   debris:{enabled:true, min:6, max:10, ms:600, cap:40},  // 4 碎片：每次 6～10 片，同時最多 40 片
-  squash:{enabled:true, land:0.7, ms:180, ball:1.2},     // 5 擠壓拉伸：停輪壓到 70%、彈珠沿速度拉到 120%
+  squash:{enabled:true, land:0.7, ms:180, ball:1.2},     // 5 擠壓拉伸：只用在彈珠（沿速度拉到 120%）；停輪不再擠壓
   trail:{enabled:true, len:12},                          // 6 拖尾：彈珠最近 12 個位置
   combo:{enabled:true, max:12, resetMs:1000, base:392, vol:0.12}, // 7 連擊升調：每次升 1 個半音、最多 12 級、停 1 秒回原音
   slowmo:{enabled:true, scale:0.3, zoom:1.1, ms:600}     // 8 終結慢鏡：聽牌後最後一次摸牌
@@ -1021,7 +1021,7 @@ async function land(cell,lastCell){
   }
   if(cell.baxian){ setFace(el,cell.seq.at(-1)); gate(el,4,'八仙\n過海'); return; }
   if(cell.flower){ setFace(el,cell.flower); gate(el,GT.flower); toTray(cell.flower,cell); log(`<b>${cell.r}-${cell.c}</b> 開出 ${name(cell.flower)}，花牌佔格不成組 · ${GT.flower} 級閘門`); return; }
-  setFace(el,cell.tile); juice.squash(el);
+  setFace(el,cell.tile);
 }
 const gname={pair:'對子',chow:'順子',pung:'刻子',kong:'槓'};
 const gsum=gs=>{const c={};gs.forEach(g=>c[g.type]=(c[g.type]||0)+1);return Object.entries(c).map(([t,n])=>gname[t]+' '+n).join('、')||'無';};
